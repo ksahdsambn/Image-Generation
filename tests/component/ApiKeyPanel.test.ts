@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ApiKeyPanel from '@/components/ApiKeyPanel.vue'
 import { apiKeyStorageKeys, useApiKeyStore } from '@/stores/apiKeyStore'
 
@@ -8,6 +8,7 @@ describe('ApiKeyPanel', () => {
   beforeEach(() => {
     localStorage.clear()
     sessionStorage.clear()
+    vi.unstubAllGlobals()
     setActivePinia(createPinia())
   })
 
@@ -50,5 +51,95 @@ describe('ApiKeyPanel', () => {
     await wrapper.get('input[aria-label="记住密钥"]').setValue(true)
 
     expect(wrapper.text()).toContain('localStorage')
+  })
+
+  it('tests connection through the read-only endpoint and shows loading state', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchFn)
+    const wrapper = mount(ApiKeyPanel, {
+      props: {
+        rememberKeyEnabled: true,
+        sub2ApiBaseUrl: 'https://sub2api.example.com',
+        canTestConnection: true,
+      },
+    })
+
+    await wrapper.get('input[aria-label="Sub2API API Key"]').setValue('sk-component')
+    const button = wrapper.get('button[aria-label="测试 Sub2API 连接"]')
+    await button.trigger('click')
+
+    expect(wrapper.text()).toContain('测试中')
+    await vi.waitFor(() => {
+      expect(fetchFn).toHaveBeenCalledWith('https://sub2api.example.com/v1/models', {
+        method: 'GET',
+        headers: { Authorization: 'Bearer sk-component' },
+      })
+    })
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('连接正常')
+    })
+  })
+
+  it('shows auth and CORS failures during connection checks', async () => {
+    const fetchFn = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'bad key' }), {
+          status: 401,
+          headers: { 'content-type': 'application/json' },
+        }),
+      )
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    vi.stubGlobal('fetch', fetchFn)
+    const wrapper = mount(ApiKeyPanel, {
+      props: {
+        rememberKeyEnabled: true,
+        sub2ApiBaseUrl: 'https://sub2api.example.com',
+        canTestConnection: true,
+      },
+    })
+
+    await wrapper.get('input[aria-label="Sub2API API Key"]').setValue('sk-component')
+    await wrapper.get('button[aria-label="测试 Sub2API 连接"]').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('API Key 无效或已失效')
+    })
+
+    await wrapper.get('button[aria-label="测试 Sub2API 连接"]').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('Sub2API 后端未允许当前生图站域名跨域访问')
+    })
+  })
+
+  it('resets connection status after API Key changes', async () => {
+    const fetchFn = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchFn)
+    const wrapper = mount(ApiKeyPanel, {
+      props: {
+        rememberKeyEnabled: true,
+        sub2ApiBaseUrl: 'https://sub2api.example.com',
+        canTestConnection: true,
+      },
+    })
+
+    await wrapper.get('input[aria-label="Sub2API API Key"]').setValue('sk-component')
+    await wrapper.get('button[aria-label="测试 Sub2API 连接"]').trigger('click')
+    await vi.waitFor(() => {
+      expect(wrapper.text()).toContain('连接正常')
+    })
+
+    await wrapper.get('input[aria-label="Sub2API API Key"]').setValue('sk-new')
+
+    expect(wrapper.text()).toContain('API Key 已修改，请重新测试连接')
   })
 })

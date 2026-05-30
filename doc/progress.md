@@ -162,3 +162,205 @@
   - 错误提示沿用全局分类，不暴露 Authorization 或 API Key。
   - 未输出完整 base64 到日志。
 - 是否放行：是，7. Sub2API 请求层完成。
+
+### 8. 图片转换与下载
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 新增 `src/utils/imageResult.ts`，实现 `b64_json` 到 `Blob` 的转换、PNG/WebP/JPEG MIME 推断、扩展名映射、当前结果对象 URL 创建与释放、单图下载、批量下载辅助、剪贴板复制图片或 Data URL 降级。
+  - 新增 `src/components/CurrentResultsPanel.vue`，实现当前结果空状态、加载状态、错误状态、多图网格预览、单图下载、批量下载、复制、移除当前结果，并在图片变化和组件销毁时释放对象 URL。
+  - 更新 `src/App.vue`，用当前结果面板替换占位结果区；当前结果移除只影响当前预览，不删除未来 IndexedDB 历史。
+  - 新增 `tests/unit/imageResult.test.ts`，覆盖 base64 转 Blob、MIME 推断、MIME fallback、多图转换、`revised_prompt` 保留、对象 URL 创建与释放。
+  - 新增 `tests/component/CurrentResultsPanel.test.ts`，覆盖空状态、预览 URL 创建、URL 释放、移除事件、单图/批量下载、剪贴板复制成功与失败提示。
+- 测试结果：
+  - `npm run test:unit -- imageResult`：通过，8 个测试文件、43 个测试通过。
+  - `npm run test:component -- CurrentResultsPanel`：通过，6 个测试文件、18 个测试通过。
+  - `npm run typecheck`：通过。
+  - `npm run test:unit`：通过，8 个测试文件、43 个测试通过。
+  - `npm run test:component`：通过，6 个测试文件、18 个测试通过。
+  - `npm run build`：通过。
+- 失败回退检查：
+  - 未输出完整 base64 到控制台。
+  - 下载文件扩展名与推断 MIME 保持一致。
+  - 当前结果对象 URL 在结果变化和组件卸载时释放。
+  - 未引入后端、对象存储、Axios 或大型 UI 库。
+- 是否放行：是，允许进入 9. IndexedDB 本地图库。
+
+### 9. IndexedDB 本地图库
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 新增测试依赖 `fake-indexeddb`，仅用于 Vitest 中隔离模拟浏览器 IndexedDB；运行时代码仍使用 Dexie 和浏览器原生 IndexedDB。
+  - 扩展 `src/types/history.ts`，定义历史完整记录、列表记录、持久化 Blob 结构、查询条件和容量限制类型。
+  - 新增 `src/storage/historyDb.ts`，建立 Dexie 数据库 `gpt-image-2-local-gallery`，版本为 1，按 `history` 元数据/缩略图表与 `images` 大图表分离存储，避免历史列表一次性读取大图。
+  - 实现历史写入、生成结果批量写入、缩略图生成、单条读取、倒序分页、Prompt 搜索、日期筛选、单条删除、清空、数量清理、容量清理和 IndexedDB 可用性检测。
+  - 内部持久化 Blob 使用 `{ type, data }` 字节结构，业务层读写边界仍返回 `Blob`，避免测试环境结构化克隆差异。
+  - 新增 `src/components/LocalHistoryPanel.vue`，提供历史不可用降级提示、空状态、搜索/日期输入和基础历史操作事件；完整主界面接线留给 10 阶段。
+  - 更新 `src/App.vue`，用 `LocalHistoryPanel` 替换历史占位区，当前仍传入空列表。
+  - 新增 `tests/unit/historyDb.test.ts` 与 `tests/component/LocalHistoryPanel.test.ts`，覆盖 IndexedDB 初始化、读写、敏感信息排除、缩略图、分页、搜索、日期筛选、恢复参数数据、删除、清空、数量/容量清理和降级提示。
+- 测试结果：
+  - 首次 `npm run test:unit -- historyDb` 失败：测试环境未在 Dexie 初始化前挂载 IndexedDB；已通过 `fake-indexeddb/auto` 修复并重测。
+  - 第二次 `npm run test:unit -- historyDb` 失败：`fake-indexeddb` 在 jsdom 下不能稳定结构化克隆 `Blob`；已改为内部持久化字节结构并重测。
+  - `npm run test:unit -- historyDb`：通过，9 个测试文件、54 个测试通过。
+  - `npm run test:component -- LocalHistoryPanel`：通过，7 个测试文件、22 个测试通过。
+  - `npm run typecheck`：通过。
+  - `npm run test:unit`：通过，9 个测试文件、54 个测试通过。
+  - `npm run test:component`：通过，7 个测试文件、22 个测试通过。
+  - `npm run build`：通过。
+- 失败回退检查：
+  - 历史记录未保存 API Key、Authorization、Bearer 或用户身份信息。
+  - 历史列表只读取元数据和缩略图，不读取大图 Blob。
+  - 清空历史不影响 API Key/sessionStorage。
+  - 超过数量或容量限制时删除最旧记录并保留最新记录。
+  - IndexedDB 不可用时提供降级提示，当前结果下载能力不依赖历史。
+  - 未引入后端、对象存储、Axios 或大型 UI 库。
+- 是否放行：是，允许进入 10. 主界面。
+
+### 10. 主界面
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 更新 `GenerationParamsPanel`，新增 `canGenerate` 与 `isGenerating` 控制，缺少 API Key、配置无效、Prompt 无效或生成中时禁用 Generate，并显示 loading 文案。
+  - 为本地参考图和遮罩图增加缩略图预览与对象 URL 生命周期释放；非图片或超限文件会被拒绝并显示提示。
+  - 增强 `GenerationParamsPanel` 测试，覆盖 API Key 缺失禁用、loading 禁用、参考图上传/预览/移除、非图片拒绝、URL 校验、遮罩图和遮罩 URL 输入。
+  - 更新 `App.vue` 工作台接线：顶部 API Key 区、参数表单、当前结果区、本地历史区四区齐备；历史区接入 IndexedDB 可用性检测、搜索、日期筛选、重新载入参数、下载、删除和清空操作。
+  - `LocalHistoryPanel` 已提供历史不可用、空状态、历史列表、搜索、日期筛选和基础操作；`CurrentResultsPanel` 已提供空、加载、错误和成功状态。
+  - 增强 `App` 测试，确认工作台区域存在、无 API Key 时无法提交、API Key 不在输入框外泄露。
+- 测试结果：
+  - 首次 `npm run test:component -- GenerationParamsPanel App LocalHistoryPanel CurrentResultsPanel ApiKeyPanel` 失败：文件 input 测试使用了错误的 `setValue` 写法，且 URL 校验被空 Prompt 首个错误覆盖；已修正为模拟 `files` 并补 Prompt 后重测。
+  - `npm run test:component -- GenerationParamsPanel App LocalHistoryPanel CurrentResultsPanel ApiKeyPanel`：通过，9 个测试文件、45 个测试通过。
+  - `npm run typecheck`：通过。
+  - `npm run test:unit`：通过，9 个测试文件、54 个测试通过。
+  - `npm run test:component`：通过，7 个测试文件、29 个测试通过。
+  - `npm run build`：通过。
+  - `npm run test:e2e`：通过，1 个 Playwright smoke 测试通过。
+- 失败回退检查：
+  - 首页仍是生图工作台，没有营销落地页。
+  - 页面没有可编辑模型选择器，没有 Base URL 输入框。
+  - API Key 不在输入框外显示，不进入历史 UI。
+  - 图标按钮均有 `aria-label` 或明确文本。
+  - 参考图和遮罩图对象 URL 会在变化或卸载时释放。
+  - 未引入后端、对象存储、Axios 或大型 UI 库。
+- 是否放行：是，允许进入 11. 流程集成。
+
+### 11. 流程集成
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 新增 `src/services/generationWorkflow.ts`，把 API 请求、`b64_json` 图片转换、当前结果返回、历史写入和历史写入失败降级封装为可测试流程。
+  - 更新 `src/App.vue`，接入 `GenerationParamsPanel` submit 事件，使用 `createImageApiClient` 发起请求，成功后写入当前结果区并保存到 IndexedDB 历史；请求失败时显示错误且不写历史；历史写入失败时保留当前结果并提示用户下载。
+  - 文生图、multipart 本地参考图改图、URL 改图和 mask URL 均通过现有请求层决策进入正确接口。
+  - 更新 `createThumbnailBlob`，在测试或受限浏览器环境缺少 `createImageBitmap` 时降级使用原图 Blob，保证当前结果和历史写入链路不崩溃。
+  - 新增 `tests/unit/generationWorkflow.test.ts`，覆盖成功写历史、API 失败不写历史、历史写入失败不丢当前结果。
+  - 新增 `tests/component/AppWorkflow.test.ts`，使用模拟 Fetch 和隔离 IndexedDB 验证文生图完整流程、本地参考图 multipart edits、URL edits + mask URL、无 API Key 不发请求、API 失败不写历史。
+  - 使用 Browser 插件打开 `http://127.0.0.1:5173/` 做真实渲染检查，确认工作台区域、API Key 区、参数表单、当前结果和本地历史区域可见，Generate 在缺少 Prompt/API Key 时禁用。
+- 测试结果：
+  - 首次 `npm run test:component -- AppWorkflow App GenerationParamsPanel CurrentResultsPanel LocalHistoryPanel` 失败：测试中共享 Dexie 实例被关闭导致后续用例数据库关闭，且当前结果断言等待不足；已修正测试生命周期和异步等待。
+  - 第二次同命令失败：认证失败提示断言等待不足；已补充等待后重测。
+  - `npm run test:unit -- generationWorkflow imageApi historyDb imageResult`：通过，10 个测试文件、57 个测试通过。
+  - `npm run test:component -- AppWorkflow App GenerationParamsPanel CurrentResultsPanel LocalHistoryPanel`：通过，10 个测试文件、50 个测试通过。
+  - `npm run typecheck`：通过。
+  - `npm run test:unit`：通过，10 个测试文件、57 个测试通过。
+  - `npm run test:component`：通过，8 个测试文件、34 个测试通过。
+  - `npm run build`：通过。
+  - `npm run test:e2e`：通过，1 个 Playwright smoke 测试通过。
+  - Browser 真实渲染检查：通过，页面在 `http://127.0.0.1:5173/` 可打开，核心工作台区域可见。
+- 失败回退检查：
+  - API 请求失败不会新增 IndexedDB 历史。
+  - IndexedDB 写入失败不会清空当前结果。
+  - API Key 只作为 Authorization 发送到配置的 Sub2API Base URL。
+  - 请求模型仍固定为 `gpt-image-2`，响应格式仍固定为 `b64_json`。
+  - 未新增后端代理、服务端存储、对象存储、Axios 或大型 UI 库。
+- 是否放行：是，8. 图片转换与下载、9. IndexedDB 本地图库、10. 主界面、11. 流程集成均已完成并放行。
+
+### 12. 连接检查
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 在 `src/services/imageApi.ts` 新增只读连接检查，使用 `GET /v1/models` 和 `Authorization: Bearer <api_key>`，不调用 `/v1/images/generations` 或 `/v1/images/edits`，不消耗图片额度。
+  - 在 `src/components/ApiKeyPanel.vue` 新增“测试连接”按钮、加载状态、成功提示和错误提示。
+  - API Key 修改后连接状态自动恢复为未测试，避免旧状态误导用户。
+  - `src/App.vue` 将固定构建配置中的 Sub2API Base URL 和配置可用状态传入 API Key 面板，页面仍不提供 Base URL 输入框。
+- 测试结果：
+  - `npm run test:unit -- imageApi`：通过，10 个测试文件、60 个测试通过；覆盖连接成功、认证失败、CORS 失败、网络失败和只读 endpoint。
+  - `npm run test:component -- ApiKeyPanel`：通过，8 个测试文件、37 个测试通过；覆盖连接按钮 loading、成功/失败提示和 API Key 修改后的状态重置。
+  - `npm run typecheck`：通过。
+- 失败回退检查：
+  - 连接测试未触发生图接口，未进入 `/v1/images/generations` 或 `/v1/images/edits`。
+  - API Key 仅作为 Authorization 请求头发送到配置的 Sub2API Base URL。
+- 是否放行：是，允许进入 13. 安全与隐私。
+
+### 13. 安全与隐私
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 新增 `tests/e2e/security.spec.ts`，用 Playwright 拦截浏览器请求，验证携带 Authorization 的请求只发送到配置的 Sub2API Base URL。
+  - 验证生成成功后 API Key 不进入 IndexedDB 历史记录，localStorage 不保存密钥、大图、base64 或 data URL；默认密钥仅存在 sessionStorage。
+  - 验证失败请求的界面错误和控制台输出不包含 API Key、Authorization 或 Bearer 内容。
+  - 更新 `playwright.config.ts`，为 e2e 自动启动本地 Vite dev server，并注入测试用 Sub2API Base URL。
+- 测试结果：
+  - 首次 `npm run test:e2e -- security.spec.ts` 失败，原因是本机缺少 Playwright Chromium，可执行文件未安装；已执行 `npx playwright install chromium` 修复环境。
+  - 重跑 `npm run test:e2e -- security.spec.ts`：通过，2 个 e2e 测试通过。
+  - `npm run build`：通过。
+  - `npm run test:unit -- historyRecord historyDb appError imageResult`：通过，10 个测试文件、60 个测试通过。
+  - 敏感密钥正则扫描：通过，源码、测试和构建产物未发现真实 API Key 形态。
+  - `console.` 扫描：通过，`src` 和 `tests` 中未发现控制台输出。
+  - localStorage/base64 扫描：通过，localStorage 写入仅在 API Key store 中，base64 仅存在图片转换逻辑和固定响应格式定义中。
+  - Authorization/Bearer 扫描：通过，仅存在请求头构建逻辑及构建后对应代码，未发现硬编码密钥。
+- 失败回退检查：
+  - 未发现真实密钥；无需轮换。
+  - API Key 仅作为 Authorization 发送到配置的 Sub2API Base URL。
+  - 未发现大图写入 localStorage，也未发现敏感日志输出。
+- 是否放行：是，允许进入 14. 响应式与可访问性。
+
+### 14. 响应式与可访问性
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 按 `adapt` 技能检查桌面、平板和手机视口，新增 `tests/e2e/responsive.spec.ts`。
+  - Playwright 在 1440x1000 桌面、820x1180 平板、390x844 手机视口生成截图并检查无横向溢出。
+  - 手机视口验证完整核心流程：输入 API Key、填写 Prompt、模拟生成、查看历史、触发下载。
+  - 新增按钮可访问名称检查，确保图标按钮具备文本、`aria-label` 或 `title`。
+  - 修复 `src/storage/historyDb.ts` 中缩略图解码失败会导致历史写入失败的问题：`createImageBitmap` 失败时降级使用原图 Blob，保证当前结果和历史写入链路稳定。
+- 测试结果：
+  - 首次 `npm run test:e2e -- responsive.spec.ts` 失败：移动端生成后历史为空，原因是测试图像无法解码缩略图导致 IndexedDB 写入失败。
+  - 替换测试图片为合法 1x1 PNG，并增加缩略图解码失败降级后，重跑 `npm run test:e2e -- responsive.spec.ts`：通过，3 个 e2e 测试通过。
+  - `npm run test:unit -- historyDb`：通过，10 个测试文件、61 个测试通过。
+  - `npm run typecheck`：通过。
+- 失败回退检查：
+  - 桌面、平板、手机视口均无横向溢出。
+  - 手机端核心流程可完成，结果可预览，历史可见，下载可触发。
+  - 未发现无可访问名称按钮。
+- 是否放行：是，允许进入 15. 自动化测试。
+
+### 15. 自动化测试
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 新增 `tests/e2e/workflow.spec.ts`，覆盖无 API Key 禁止提交、错误 API Key 显示认证错误且不写历史、成功生成写入历史、刷新后历史恢复、删除历史记录。
+  - 将第 13 阶段安全 e2e、第 14 阶段响应式 e2e 与主流程 e2e 一并纳入 Playwright 全套。
+  - 确认配置、API Key 状态、生成参数、请求构建、图片转换、IndexedDB、组件和浏览器主流程均有自动化覆盖。
+- 测试结果：
+  - `npm run test:unit -- appConfig apiKeyStore generationParamsStore`：通过。
+  - `npm run test:unit -- imageApi`：通过。
+  - `npm run test:unit -- imageResult`：通过。
+  - `npm run test:unit -- historyDb`：通过。
+  - `npm run test:component`：通过，8 个测试文件、37 个测试通过。
+  - `npm run test:e2e`：通过，10 个 Playwright 测试通过。
+  - `npm run test:unit`：通过，10 个测试文件、61 个测试通过。
+  - `npm run typecheck`：通过。
+  - `npm run build`：通过。
+- 失败回退检查：
+  - 组件测试使用模拟请求和隔离本地存储，不访问真实网络。
+  - Playwright 测试使用拦截的模拟 Sub2API 响应，不使用真实生产 API Key。
+  - 所有请求层测试继续确认固定 `gpt-image-2` 和 `b64_json`。
+- 是否放行：是，允许进入 16. 真实 Sub2API 联调。
+
+### 16. 真实 Sub2API 联调
+- 操作 AI 模型：GPT-5 Codex
+- 完成内容：
+  - 按阶段顺序进入真实联调前置检查。
+  - 检查本地运行期配置文件是否存在：`.env`、`.env.local`、`.env.development`、`.env.production` 均不存在。
+  - 检查环境变量是否存在：`VITE_SUB2API_BASE_URL`、`SUB2API_TEST_API_KEY`、`VITE_SUB2API_TEST_API_KEY` 均不存在。
+  - 未读取、输出或写入任何真实 API Key。
+- 测试结果：
+  - 16.1 Sub2API CORS 浏览器真实请求测试：未执行，原因是缺少真实 `VITE_SUB2API_BASE_URL`，无法确定待联调后端和允许来源。
+  - 16.2 测试 API Key 认证测试：未执行，原因是缺少可用测试 API Key，且不得把真实密钥写入代码、测试或文档。
+  - 16.3 真实文生图、16.4 真实本地参考图改图、16.5 真实网页图片 URL 改图、16.6 联调后密钥处理：未执行，原因是 16.1/16.2 前置条件未通过。
+- 失败回退检查：
+  - 未使用模拟请求冒充真实联调。
+  - 未把真实或疑似真实 API Key 写入项目文件。
+  - 未进入后续阶段。
+- 是否放行：否。第 16 阶段阻塞在外部配置缺失，需要提供真实 Sub2API Base URL、已配置 CORS 的站点来源，以及仅用于联调的测试 API Key 后才能继续。

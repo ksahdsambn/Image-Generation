@@ -30,6 +30,7 @@ type JsonBody = Record<string, unknown>
 
 const GENERATIONS_PATH = '/v1/images/generations'
 const EDITS_PATH = '/v1/images/edits'
+const MODELS_PATH = '/v1/models'
 
 export function resolveImageRequestMode(params: NormalizedGenerationParams): ImageRequestMode {
   if (params.referenceImages.length > 0 && params.imageUrls.length > 0) {
@@ -82,6 +83,16 @@ export function createImageApiClient(options: ImageApiClientOptions) {
     }
 
     return generateFromText(params)
+  }
+
+  async function checkConnection(): Promise<void> {
+    assertUsableOptions(options)
+    const response = await safeFetch(`${baseUrl}${MODELS_PATH}`, {
+      method: 'GET',
+      headers: createAuthHeaders(options.apiKey),
+    })
+
+    await parseConnectionResponse(response)
   }
 
   async function generateFromText(params: NormalizedGenerationParams): Promise<ImageApiResult[]> {
@@ -154,6 +165,7 @@ export function createImageApiClient(options: ImageApiClientOptions) {
     generateFromText,
     editWithLocalImages,
     editWithImageUrls,
+    checkConnection,
   }
 }
 
@@ -220,6 +232,14 @@ async function parseJsonResponse(response: Response): Promise<ImageApiResult[]> 
   }
 
   return parseImageApiResponse(body)
+}
+
+async function parseConnectionResponse(response: Response): Promise<void> {
+  const body = await parseResponseBody(response)
+
+  if (!response.ok) {
+    throw classifyHttpError({ status: response.status, body })
+  }
 }
 
 async function parseResponseBody(response: Response): Promise<unknown> {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RotateCcw, Send, X } from 'lucide-vue-next'
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useGenerationParamsStore } from '@/stores/generationParamsStore'
 import {
   MAX_IMAGE_COUNT,
@@ -17,12 +17,31 @@ const emit = defineEmits<{
   submit: [params: NormalizedGenerationParams]
 }>()
 
+const props = withDefaults(
+  defineProps<{
+    canGenerate?: boolean
+    isGenerating?: boolean
+  }>(),
+  {
+    canGenerate: true,
+    isGenerating: false,
+  },
+)
+
 const paramsStore = useGenerationParamsStore()
 const imageUrlDraft = ref('')
+const fileNotice = ref('')
+const referencePreviewUrls = ref(new Map<string, string>())
+const maskPreviewUrl = ref('')
 
 const compressionEnabled = computed(() => supportsOutputCompression(paramsStore.outputFormat))
+const submitDisabled = computed(() => !paramsStore.canSubmit || !props.canGenerate || props.isGenerating)
 
 function handleSubmit() {
+  if (submitDisabled.value) {
+    return
+  }
+
   const validation = paramsStore.validation
   if (!validation.ok) {
     return
@@ -34,14 +53,16 @@ function handleSubmit() {
 function handleReferenceInput(event: Event) {
   const input = event.target as HTMLInputElement
   const files = Array.from(input.files ?? [])
-  files.forEach((file) => paramsStore.addReferenceImage(file))
+  const rejected = files.filter((file) => !paramsStore.addReferenceImage(file))
+  fileNotice.value = rejected.length > 0 ? 'Only image files under 10MB can be used as references.' : ''
   input.value = ''
 }
 
 function handleMaskInput(event: Event) {
   const input = event.target as HTMLInputElement
   const file = input.files?.[0] ?? null
-  paramsStore.setMaskImage(file)
+  const accepted = paramsStore.setMaskImage(file)
+  fileNotice.value = accepted ? '' : 'Only image files under 10MB can be used as masks.'
   input.value = ''
 }
 
@@ -49,6 +70,36 @@ function addImageUrl() {
   paramsStore.addImageUrl(imageUrlDraft.value)
   imageUrlDraft.value = ''
 }
+
+watch(
+  () => paramsStore.referenceImages.map((image) => image.id).join('|'),
+  () => {
+    referencePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url))
+    referencePreviewUrls.value = new Map(
+      paramsStore.referenceImages.map((image) => [image.id, URL.createObjectURL(image.file)]),
+    )
+  },
+)
+
+watch(
+  () => paramsStore.maskImage?.id,
+  () => {
+    if (maskPreviewUrl.value) {
+      URL.revokeObjectURL(maskPreviewUrl.value)
+      maskPreviewUrl.value = ''
+    }
+    if (paramsStore.maskImage) {
+      maskPreviewUrl.value = URL.createObjectURL(paramsStore.maskImage.file)
+    }
+  },
+)
+
+onBeforeUnmount(() => {
+  referencePreviewUrls.value.forEach((url) => URL.revokeObjectURL(url))
+  if (maskPreviewUrl.value) {
+    URL.revokeObjectURL(maskPreviewUrl.value)
+  }
+})
 </script>
 
 <template>
@@ -159,7 +210,10 @@ function addImageUrl() {
       />
       <ul v-if="paramsStore.referenceImages.length" class="space-y-2">
         <li v-for="image in paramsStore.referenceImages" :key="image.id" class="flex items-center justify-between gap-2 text-sm text-slate-700">
-          <span class="min-w-0 truncate">{{ image.name }}</span>
+          <span class="flex min-w-0 items-center gap-2">
+            <img class="size-10 shrink-0 rounded object-cover" :src="referencePreviewUrls.get(image.id)" :alt="`Reference ${image.name}`" />
+            <span class="min-w-0 truncate">{{ image.name }}</span>
+          </span>
           <button
             class="inline-grid size-8 shrink-0 place-items-center rounded-md border border-slate-300 text-slate-700"
             type="button"
@@ -220,7 +274,11 @@ function addImageUrl() {
         placeholder="Optional mask URL"
         @input="paramsStore.setMaskImageUrl(($event.target as HTMLInputElement).value)"
       />
-      <p v-if="paramsStore.maskImage" class="truncate text-sm text-slate-700">Local mask: {{ paramsStore.maskImage.name }}</p>
+      <p v-if="paramsStore.maskImage" class="flex items-center gap-2 text-sm text-slate-700">
+        <img v-if="maskPreviewUrl" class="size-10 shrink-0 rounded object-cover" :src="maskPreviewUrl" :alt="`Mask ${paramsStore.maskImage.name}`" />
+        <span class="min-w-0 truncate">Local mask: {{ paramsStore.maskImage.name }}</span>
+      </p>
+      <p v-if="fileNotice" class="text-xs text-amber-800" role="status">{{ fileNotice }}</p>
     </div>
 
     <div v-if="!paramsStore.validation.ok" class="rounded-md bg-amber-50 p-3 text-sm text-amber-900" role="status">
@@ -231,10 +289,10 @@ function addImageUrl() {
       <button
         class="inline-flex items-center justify-center gap-2 rounded-md bg-emerald-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-slate-300"
         type="submit"
-        :disabled="!paramsStore.canSubmit"
+        :disabled="submitDisabled"
       >
         <Send class="size-4" aria-hidden="true" />
-        Generate
+        {{ props.isGenerating ? 'Generating...' : 'Generate' }}
       </button>
       <button
         class="inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"

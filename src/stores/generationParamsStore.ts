@@ -108,6 +108,37 @@ export const useGenerationParamsStore = defineStore('generationParams', {
     resetParams() {
       this.$patch(createDefaultGenerationParams())
     },
+    loadSerializedParams(params: Record<string, unknown>) {
+      if (typeof params.prompt === 'string') {
+        this.prompt = params.prompt
+      }
+      if (typeof params.size === 'string') {
+        this.setSize(params.size)
+      }
+      if (typeof params.n === 'number') {
+        this.setCount(params.n)
+      }
+      if (typeof params.quality === 'string') {
+        this.setQuality(params.quality)
+      }
+      if (typeof params.background === 'string') {
+        this.setBackground(params.background)
+      }
+      if (typeof params.output_format === 'string') {
+        this.setOutputFormat(params.output_format)
+      }
+      if (typeof params.output_compression === 'number') {
+        this.setOutputCompression(params.output_compression)
+      }
+      if (Array.isArray(params.imageUrls)) {
+        this.imageUrls = params.imageUrls.filter((url): url is string => typeof url === 'string')
+      }
+      if (typeof params.maskImageUrl === 'string') {
+        this.maskImageUrl = params.maskImageUrl
+      }
+      this.referenceImages = []
+      this.maskImage = null
+    },
     setTypedSize(value: ImageSize) {
       this.size = value
     },

@@ -12,3 +12,33 @@ export type ImageHistoryRecord = {
   byteSize: number
   revisedPrompt?: string
 }
+
+export type ImageHistoryListItem = Omit<ImageHistoryRecord, 'imageBlob'>
+
+export type PersistedBlob = {
+  type: string
+  data: ArrayBuffer
+}
+
+export type StoredImageHistoryMetadata = Omit<ImageHistoryListItem, 'thumbnailBlob'> & {
+  thumbnailBlob: PersistedBlob
+}
+
+export type StoredImageBlobRecord = {
+  id: string
+  imageBlob: PersistedBlob
+}
+
+export type ImageHistoryCreateInput = Omit<ImageHistoryRecord, 'id' | 'createdAt' | 'byteSize'>
+
+export type HistoryQuery = {
+  search?: string
+  date?: string
+  limit?: number
+  offset?: number
+}
+
+export type HistoryLimits = {
+  maxItems: number
+  maxBytes: number
+}

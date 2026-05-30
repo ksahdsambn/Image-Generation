@@ -195,4 +195,54 @@ describe('image API service', () => {
 
     await expect(client.generateFromText(baseParams)).rejects.toMatchObject({ code: 'cors' })
   })
+
+  it('checks connection through a read-only models endpoint with auth headers', async () => {
+    const fetchFn = createFetchMock({ data: [] })
+    const client = createImageApiClient({
+      baseUrl: 'https://sub2api.example.com/',
+      apiKey: 'sk-test',
+      fetchFn,
+    })
+
+    await client.checkConnection()
+
+    const [url, init] = vi.mocked(fetchFn).mock.calls[0]
+    expect(url).toBe('https://sub2api.example.com/v1/models')
+    expect(init?.method).toBe('GET')
+    expect(init?.headers).toMatchObject({ Authorization: 'Bearer sk-test' })
+    expect(String(url)).not.toContain('/v1/images/generations')
+    expect(String(url)).not.toContain('/v1/images/edits')
+  })
+
+  it('classifies connection auth failures without parsing image data', async () => {
+    const fetchFn = createFetchMock({ error: 'bad key' }, 401)
+    const client = createImageApiClient({
+      baseUrl: 'https://sub2api.example.com',
+      apiKey: 'sk-test',
+      fetchFn,
+    })
+
+    await expect(client.checkConnection()).rejects.toMatchObject({ code: 'auth' })
+  })
+
+  it('classifies connection CORS and network failures', async () => {
+    const corsFetch = vi.fn().mockRejectedValue(new TypeError('Failed to fetch')) as unknown as typeof fetch
+    const networkFetch = vi.fn().mockRejectedValue(new Error('socket closed')) as unknown as typeof fetch
+
+    await expect(
+      createImageApiClient({
+        baseUrl: 'https://sub2api.example.com',
+        apiKey: 'sk-test',
+        fetchFn: corsFetch,
+      }).checkConnection(),
+    ).rejects.toMatchObject({ code: 'cors' })
+
+    await expect(
+      createImageApiClient({
+        baseUrl: 'https://sub2api.example.com',
+        apiKey: 'sk-test',
+        fetchFn: networkFetch,
+      }).checkConnection(),
+    ).rejects.toMatchObject({ code: 'network' })
+  })
 })
