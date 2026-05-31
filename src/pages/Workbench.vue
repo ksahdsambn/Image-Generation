@@ -32,17 +32,14 @@ async function handleGenerate() {
       <p class="text-sm text-red-700 text-center">{{ config.configError }}</p>
     </header>
 
-    <header v-else class="border-b border-gray-200 bg-white px-4 py-3">
-      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <header v-else class="border-b border-gray-200 bg-white px-4 py-5">
+      <div class="max-w-7xl mx-auto">
         <h1 class="text-lg font-semibold text-gray-900 shrink-0">{{ config.appTitle }}</h1>
-        <div class="w-full sm:flex-1 sm:max-w-md">
-          <ApiKeyInput />
-        </div>
       </div>
     </header>
 
     <main class="flex-1 max-w-7xl mx-auto w-full p-4">
-      <div class="lg:grid lg:grid-cols-[360px_1fr_260px] lg:gap-4">
+      <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-4">
         <section class="space-y-4 mb-4 lg:mb-0" aria-label="生成配置">
           <div class="bg-white rounded-lg border border-gray-200 p-4">
             <GenerationForm />
@@ -73,7 +70,10 @@ async function handleGenerate() {
           </div>
         </section>
 
-        <section aria-label="本地历史">
+        <section class="space-y-4" aria-label="密钥和本地历史" data-testid="right-rail">
+          <div class="bg-white rounded-lg border border-gray-200 p-4">
+            <ApiKeyInput />
+          </div>
           <div class="bg-white rounded-lg border border-gray-200 p-4">
             <HistoryPanel />
           </div>

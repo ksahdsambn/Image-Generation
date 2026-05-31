@@ -31,6 +31,17 @@ describe('Workbench Layout (Step 16)', () => {
     expect(wrapper.find('[data-testid="api-key-input"]').exists()).toBe(true)
   })
 
+  it('places API Key area above local history in the right rail', () => {
+    const wrapper = mountWorkbench()
+    const rightRail = wrapper.find('[data-testid="right-rail"]')
+    expect(rightRail.exists()).toBe(true)
+    expect(rightRail.find('[data-testid="api-key-area"]').exists()).toBe(true)
+    expect(rightRail.find('[data-testid="history-panel"]').exists()).toBe(true)
+    expect(rightRail.html().indexOf('data-testid="api-key-area"')).toBeLessThan(
+      rightRail.html().indexOf('data-testid="history-panel"'),
+    )
+  })
+
   it('renders generation form area', () => {
     const wrapper = mountWorkbench()
     expect(wrapper.find('[data-testid="generation-form"]').exists()).toBe(true)
