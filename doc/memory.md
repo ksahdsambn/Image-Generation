@@ -1,5 +1,24 @@
 # 修复记录
 
+## 2026-06-01 多端响应式适配增强
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `adapt` skill 对当前 Vue/Tailwind 前端做响应式视觉和不同屏幕尺寸下的 UI 稳定性增强；未修改业务逻辑、接口、状态管理、数据结构、store、service、types、上传/生成/历史/API Key 行为；保持现有页面信息架构、组件层级和桌面端三栏布局分配。
+- 修改内容:
+  - `src/style.css`: 增加全局 `overflow-x` 防护、媒体元素最大宽度、核心容器 `min-width: 0`、长 Prompt/URL/错误/提示文本的 `overflow-wrap` 防护、结果网格基于容器宽度的自适应列宽、移动/平板下历史列表取消嵌套横向风险。
+  - `src/pages/Workbench.vue`: 保持三栏结构不变，补充顶栏标题和卡片区域的窄屏宽度约束，并让移动端卡片内边距更稳。
+  - `src/components/GenerationForm.vue`: 优化 Prompt 错误换行、数量步进器和重置按钮在移动/平板下的触控尺寸。
+  - `src/components/ApiKeyInput.vue`: 优化密钥输入框内嵌按钮、连接测试按钮、连接状态和记住密钥提示在窄屏下的换行与点击区域。
+  - `src/components/ReferenceImages.vue`、`src/components/MaskImageInput.vue`: 优化上传区、URL 输入/添加/确认、长 URL 预览和移除按钮在移动/平板下的排布与可点击区域。
+  - `src/components/ResultGrid.vue`、`src/components/HistoryPanel.vue`: 优化结果区头部、结果操作按钮、错误/警告文本、历史搜索/日期输入、历史项按钮和图片弹窗在不同视口下的稳定性。
+- 验证:
+  - `npm run build`: passed。
+  - `npm test`: 26 files / 434 tests passed。
+  - `npm run test:e2e`: 16 tests passed。
+  - 内置浏览器检查 `1280x720`: document/body horizontal overflow 均为 0。
+  - Playwright 多视口长文本检查 `320x780`、`390x844`、`768x1024`、`1024x768`、`1440x900`: 注入长 Prompt、长 URL、长 Mask URL 后 `documentOverflowX` 均为 0，核心三段区域无重叠、无水平越界元素。
+  - 截图产物: `test-results/adapt-mobile-320.png`、`test-results/adapt-tablet-768.png`、`test-results/adapt-desktop-1440.png` 等本地验证截图。
+
 ## 2026-06-01 UI 最终视觉润色
 
 - 操作模型ID: GPT-5 Codex

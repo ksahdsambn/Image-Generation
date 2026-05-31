@@ -29,6 +29,14 @@
     box-sizing: border-box;
   }
 
+  html,
+  body,
+  #app {
+    width: 100%;
+    min-height: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     min-width: 320px;
     min-height: 100vh;
@@ -46,6 +54,13 @@
   select {
     font: inherit;
     letter-spacing: 0;
+  }
+
+  img,
+  svg,
+  canvas,
+  video {
+    max-width: 100%;
   }
 
   ::selection {
@@ -116,6 +131,18 @@
 
   .studio-card > * {
     position: relative;
+  }
+
+  .studio-shell,
+  .studio-topbar,
+  .studio-card,
+  .generation-form,
+  .api-key-area,
+  .reference-images,
+  .mask-image-input,
+  .result-grid,
+  .history-panel {
+    min-width: 0;
   }
 
   .studio-primary-button {
@@ -255,6 +282,7 @@
   .reference-images input:not([type="file"]),
   .mask-image-input input:not([type="file"]),
   .history-panel input {
+    max-width: 100%;
     min-height: 40px;
     border-radius: 7px;
   }
@@ -268,12 +296,39 @@
     text-overflow: ellipsis;
   }
 
+  .generation-form [data-testid="prompt-error"],
+  .reference-images [data-testid="mix-conflict-warning"],
+  .reference-images [data-testid="validation-error"],
+  .reference-images [data-testid="web-url-list"],
+  .mask-image-input [data-testid="mask-validation-error"],
+  .mask-image-input [data-testid="mask-preview"],
+  .result-grid [data-testid="error-state"],
+  .result-grid [data-testid="storage-warning"],
+  .history-panel [data-testid="storage-unavailable"],
+  .api-key-area [data-testid="connection-error"],
+  .api-key-area [data-testid="connection-ok"],
+  .api-key-area [data-testid="remember-risk-hint"] {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .result-grid [data-testid="result-images"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+
+  .result-grid [data-testid="result-images"] > div,
+  .history-panel [data-testid="history-item"],
+  .reference-images [data-testid="web-url-list"] > div {
+    min-width: 0;
+  }
+
   .generation-form button,
   .api-key-area button,
   .reference-images button,
   .mask-image-input button,
   .result-grid button,
   .history-panel button {
+    touch-action: manipulation;
     border-radius: 7px;
   }
 
@@ -363,6 +418,14 @@
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.78) inset;
   }
 
+  @media (max-width: 1023px) {
+    .history-panel [data-testid="history-list"] {
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
+    }
+  }
+
   @media (max-width: 640px) {
     .studio-topbar {
       padding-top: 0.875rem;
@@ -380,7 +443,7 @@
     .reference-images input:not([type="file"]),
     .mask-image-input input:not([type="file"]),
     .history-panel input {
-      min-height: 42px;
+      min-height: 44px;
     }
   }
 

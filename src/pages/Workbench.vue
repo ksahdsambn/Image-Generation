@@ -29,12 +29,12 @@ async function handleGenerate() {
 <template>
   <div class="studio-shell min-h-screen text-stone-950 flex flex-col">
     <header v-if="config.configError" class="border-b border-red-200 bg-red-50/95 px-4 py-3 shadow-sm">
-      <p class="text-sm font-medium text-red-700 text-center">{{ config.configError }}</p>
+      <p class="text-sm font-medium text-red-700 text-center break-words">{{ config.configError }}</p>
     </header>
 
     <header v-else class="studio-topbar sticky top-0 z-20 border-b px-4 py-4">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        <h1 class="studio-title text-lg sm:text-xl font-semibold shrink-0 truncate">{{ config.appTitle }}</h1>
+      <div class="max-w-7xl mx-auto flex min-w-0 items-center justify-between gap-4">
+        <h1 class="studio-title min-w-0 flex-1 truncate text-lg sm:flex-none sm:text-xl font-semibold">{{ config.appTitle }}</h1>
         <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-stone-500">
           <span class="h-2 w-2 rounded-full bg-teal-600 shadow-[0_0_0_4px_rgb(18_126_115_/_0.12)]"></span>
           GPT Image Studio
@@ -45,13 +45,13 @@ async function handleGenerate() {
     <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-4 lg:p-5">
       <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-5">
         <section class="space-y-4 mb-4 lg:mb-0 min-w-0" aria-label="生成配置">
-          <div class="studio-card p-4">
+          <div class="studio-card p-3.5 sm:p-4">
             <GenerationForm />
           </div>
-          <div class="studio-card p-4">
+          <div class="studio-card p-3.5 sm:p-4">
             <ReferenceImages />
           </div>
-          <div class="studio-card p-4">
+          <div class="studio-card p-3.5 sm:p-4">
             <MaskImageInput />
           </div>
           <button
@@ -69,16 +69,16 @@ async function handleGenerate() {
         </section>
 
         <section class="mb-4 lg:mb-0 min-w-0" aria-label="生成结果">
-          <div class="studio-card p-4 min-h-[360px] min-w-0">
+          <div class="studio-card p-3.5 sm:p-4 min-h-[320px] sm:min-h-[360px] min-w-0">
             <ResultGrid />
           </div>
         </section>
 
         <section class="space-y-4 min-w-0" aria-label="密钥和本地历史" data-testid="right-rail">
-          <div class="studio-card p-4">
+          <div class="studio-card p-3.5 sm:p-4">
             <ApiKeyInput />
           </div>
-          <div class="studio-card p-4">
+          <div class="studio-card p-3.5 sm:p-4">
             <HistoryPanel />
           </div>
         </section>

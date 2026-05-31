@@ -48,23 +48,23 @@ function clearMask() {
 </script>
 
 <template>
-  <div class="mask-image-input space-y-3" data-testid="mask-image-input" aria-label="遮罩图">
+  <div class="mask-image-input min-w-0 space-y-3" data-testid="mask-image-input" aria-label="遮罩图">
     <h3 class="text-sm font-semibold text-stone-700">遮罩图 (可选)</h3>
 
-    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs" data-testid="mask-validation-error">
+    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs break-words" data-testid="mask-validation-error">
       {{ validationError.userMessage }}
     </div>
 
-    <div v-if="store.maskImage" class="flex items-center gap-2 p-2 rounded-lg border border-stone-200 bg-stone-50/90" data-testid="mask-preview">
+    <div v-if="store.maskImage" class="flex min-w-0 items-center gap-2 p-2 rounded-lg border border-stone-200 bg-stone-50/90" data-testid="mask-preview">
       <template v-if="store.maskImage.previewUrl">
         <img :src="store.maskImage.previewUrl" alt="遮罩图预览" class="w-10 h-10 object-cover rounded-md border border-stone-200" />
       </template>
       <template v-else-if="store.maskImage.url">
-        <span class="text-xs text-stone-600 truncate flex-1">{{ store.maskImage.url }}</span>
+        <span class="min-w-0 flex-1 truncate text-xs text-stone-600">{{ store.maskImage.url }}</span>
       </template>
       <button
         @click="clearMask()"
-        class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0"
+        class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0 lg:h-7 lg:w-7"
         type="button"
         aria-label="移除遮罩图"
         data-testid="clear-mask-btn"
@@ -85,7 +85,7 @@ function clearMask() {
       <div class="flex flex-col sm:flex-row gap-2">
         <button
           @click="fileInputRef?.click()"
-          class="flex min-h-10 items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 shadow-sm"
+          class="flex min-h-11 items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 shadow-sm lg:min-h-10"
           type="button"
           data-testid="upload-mask-btn"
           aria-label="上传遮罩图"
@@ -93,7 +93,7 @@ function clearMask() {
           <Upload :size="12" />
           上传
         </button>
-        <div class="flex gap-1.5 flex-1">
+        <div class="flex min-w-0 flex-1 gap-1.5">
           <input
             v-model="maskUrlInput"
             type="url"
@@ -105,7 +105,7 @@ function clearMask() {
           <button
             @click="setMaskUrl()"
             :disabled="!maskUrlInput.trim()"
-            class="min-w-12 px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            class="min-h-11 min-w-12 px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm lg:min-h-10"
             type="button"
             data-testid="set-mask-url-btn"
           >

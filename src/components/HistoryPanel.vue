@@ -184,12 +184,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="history-panel" data-testid="history-panel" aria-label="本地历史">
-    <div class="flex items-center justify-between gap-3 mb-3">
-      <h2 class="text-sm font-semibold text-stone-700">本地历史</h2>
+    <div class="flex min-w-0 items-center justify-between gap-3 mb-3">
+      <h2 class="min-w-0 text-sm font-semibold text-stone-700">本地历史</h2>
       <button
         v-if="historyResult.total > 0"
         @click="confirmClearAll()"
-        class="flex min-h-8 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700"
+        class="flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700 lg:min-h-8"
         type="button"
         data-testid="clear-all-btn"
         aria-label="清空全部历史"
@@ -200,16 +200,16 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="storageAvailable === false" class="p-2 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-800 text-xs" data-testid="storage-unavailable">
-      <div class="flex items-start gap-1.5">
+      <div class="flex min-w-0 items-start gap-1.5">
         <AlertTriangle :size="14" class="shrink-0 mt-0.5" />
-        <span>{{ storageMessage }}</span>
+        <span class="min-w-0 break-words">{{ storageMessage }}</span>
       </div>
     </div>
 
     <template v-else>
       <div class="space-y-2.5 mb-3">
-        <div class="flex gap-1.5">
-          <div class="relative flex-1">
+        <div class="flex min-w-0 gap-1.5">
+          <div class="relative min-w-0 flex-1">
             <Search :size="14" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
               v-model="searchQuery"
@@ -222,12 +222,12 @@ onBeforeUnmount(() => {
           </div>
           <button
             @click="searchHistory()"
-            class="min-h-10 px-2.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 shadow-sm"
+            class="min-h-11 px-2.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 shadow-sm lg:min-h-10"
             type="button"
             aria-label="搜索"
           >搜索</button>
         </div>
-        <div class="grid grid-cols-2 gap-1.5">
+        <div class="grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
           <input
             v-model="startDate"
             type="date"
@@ -245,7 +245,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <p class="text-xs font-medium text-stone-400 mb-2">图片仅保存在当前浏览器本地</p>
+      <p class="text-xs font-medium text-stone-400 mb-2 break-words">图片仅保存在当前浏览器本地</p>
 
       <div v-if="loading && historyResult.records.length === 0" class="py-8 text-center text-stone-500 text-xs" data-testid="history-loading">
         <div class="w-6 h-6 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
@@ -275,11 +275,11 @@ onBeforeUnmount(() => {
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-xs font-medium text-stone-700 truncate" :title="record.prompt">{{ record.prompt }}</p>
-            <p class="text-xs text-stone-400 mt-0.5">{{ formatDate(record.createdAt) }} · {{ record.size }}</p>
+            <p class="mt-0.5 truncate text-xs text-stone-400">{{ formatDate(record.createdAt) }} · {{ record.size }}</p>
             <div class="flex items-center gap-1 mt-1">
               <button
                 @click.stop="reloadParams(record)"
-                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
+                class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700 lg:h-6 lg:w-6"
                 type="button"
                 :aria-label="'重新载入参数'"
                 data-testid="reload-params-btn"
@@ -289,7 +289,7 @@ onBeforeUnmount(() => {
               </button>
               <button
                 @click.stop="downloadHistoryImage(record)"
-                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
+                class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700 lg:h-6 lg:w-6"
                 type="button"
                 :aria-label="'下载图片'"
                 data-testid="download-history-btn"
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
               </button>
               <button
                 @click.stop="confirmDelete(record.id!)"
-                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-red-50 text-stone-400 hover:text-red-600"
+                class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-red-50 text-stone-400 hover:text-red-600 lg:h-6 lg:w-6"
                 type="button"
                 :aria-label="'删除记录'"
                 data-testid="delete-history-btn"
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
         <button
           v-if="historyResult.hasMore"
           @click="loadMore()"
-          class="flex min-h-10 w-full items-center justify-center gap-1 rounded-lg border border-stone-200 bg-white/70 py-2 text-xs font-medium text-teal-700 hover:bg-stone-100 hover:text-teal-800"
+          class="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-stone-200 bg-white/70 py-2 text-xs font-medium text-teal-700 hover:bg-stone-100 hover:text-teal-800"
           type="button"
           data-testid="load-more-btn"
         >
@@ -327,11 +327,11 @@ onBeforeUnmount(() => {
     <Teleport to="body">
       <div
         v-if="showFullImage && fullImageRecord"
-        class="fixed inset-0 z-50 bg-stone-950/76 backdrop-blur-sm flex items-center justify-center p-4"
+        class="fixed inset-0 z-50 bg-stone-950/76 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
         @click.self="closeFullImage()"
         data-testid="image-modal"
       >
-        <div class="relative max-w-4xl max-h-[90vh] bg-[#fffdfa] rounded-lg overflow-hidden shadow-2xl">
+        <div class="relative max-h-[90vh] max-w-[calc(100vw-1rem)] bg-[#fffdfa] rounded-lg overflow-hidden shadow-2xl sm:max-w-4xl">
           <img
             :src="fullImageUrl"
             alt="历史图片"
