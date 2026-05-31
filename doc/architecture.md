@@ -179,7 +179,7 @@ src/
 | `VITE_SUB2API_BASE_URL` | Sub2API 后端地址 (必填) | - |
 | `VITE_APP_TITLE` | 应用标题 | GPT Image 2 生图站 |
 | `VITE_HISTORY_MAX_ITEMS` | 本地历史最大数量 | 50 |
-| `VITE_HISTORY_MAX_BYTES` | 本地历史最大容量 (字节) | 524288000 (500MB) |
+| `VITE_HISTORY_MAX_BYTES` | 本地历史最大容量 (字节) | 5368709120 (5GiB) |
 | `VITE_REMEMBER_KEY_ENABLED` | 是否允许记住 API Key | true |
 
 ## 架构边界

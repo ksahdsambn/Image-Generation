@@ -7,7 +7,7 @@ const defaultConfig = {
   sub2apiBaseUrl: 'https://api.example.com',
   appTitle: 'Test',
   historyMaxItems: 50,
-  historyMaxBytes: 524288000,
+  historyMaxBytes: 5368709120,
   rememberKeyEnabled: true,
   configError: null,
 }

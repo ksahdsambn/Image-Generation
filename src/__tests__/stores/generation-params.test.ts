@@ -52,9 +52,15 @@ describe('useGenerationParamsStore', () => {
     expect(store.n).toBe(5)
   })
 
-  it('rejects invalid quality', () => {
+  it('accepts medium quality', () => {
     const store = useGenerationParamsStore()
     store.setQuality('medium')
+    expect(store.quality).toBe('medium')
+  })
+
+  it('rejects invalid quality', () => {
+    const store = useGenerationParamsStore()
+    store.setQuality('standard')
     expect(store.quality).toBe('auto')
   })
 

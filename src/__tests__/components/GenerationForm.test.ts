@@ -106,6 +106,10 @@ describe('GenerationForm (Step 18)', () => {
     for (const q of IMAGE_QUALITIES) {
       expect(select.html()).toContain(q)
     }
+    expect(select.text()).toContain('自动')
+    expect(select.text()).toContain('低清')
+    expect(select.text()).toContain('中等')
+    expect(select.text()).toContain('高清')
   })
 
   it('renders background select with correct options', () => {

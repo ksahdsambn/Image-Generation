@@ -94,7 +94,7 @@ describe('容量自动清理', () => {
 
   it('超过最大容量后会删除最旧记录', async () => {
     for (let i = 0; i < 10; i++) {
-      await insertTestRecord({ createdAt: i * 1000, imageBytes: 100000000 })
+      await insertTestRecord({ createdAt: i * 1000, imageBytes: 600000000 })
     }
 
     const result = await enforceHistoryLimits()
@@ -104,7 +104,7 @@ describe('容量自动清理', () => {
     const remaining = await db.history.toArray()
     let totalBytes = 0
     for (const r of remaining) totalBytes += r.imageBytes
-    expect(totalBytes).toBeLessThanOrEqual(524288000)
+    expect(totalBytes).toBeLessThanOrEqual(5368709120)
   })
 
   it('容量不超过时不删除', async () => {

@@ -6,7 +6,7 @@ export const IMAGE_SIZES = [
 
 export type ImageSize = (typeof IMAGE_SIZES)[number]
 
-export const IMAGE_QUALITIES = ['auto', 'high', 'low'] as const
+export const IMAGE_QUALITIES = ['auto', 'low', 'medium', 'high'] as const
 export type ImageQuality = (typeof IMAGE_QUALITIES)[number]
 
 export const IMAGE_BACKGROUNDS = ['auto', 'transparent', 'opaque'] as const

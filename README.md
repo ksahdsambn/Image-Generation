@@ -16,7 +16,7 @@
 VITE_SUB2API_BASE_URL=https://uxde.de
 VITE_APP_TITLE=GPT Image 2 生图站
 VITE_HISTORY_MAX_ITEMS=50
-VITE_HISTORY_MAX_BYTES=524288000
+VITE_HISTORY_MAX_BYTES=5368709120
 VITE_REMEMBER_KEY_ENABLED=true
 ```
 
@@ -65,7 +65,7 @@ API Key 不会写入 IndexedDB 历史、下载文件、导出数据、错误提�
 
 ## 本地历史
 
-生成图片、缩略图和生成参数保存在当前浏览器的 IndexedDB 中，默认最多保留 50 条或 500MB。历史不会同步到服务器，换浏览器、换设备或清除浏览器数据后无法恢复。
+生成图片、缩略图和生成参数保存在当前浏览器的 IndexedDB 中，默认最多保留 50 条或 5GiB。历史不会同步到服务器，换浏览器、换设备或清除浏览器数据后无法恢复。5GiB 是应用清理上限，实际可用空间仍受浏览器和设备配额限制。
 
 历史面板支持查看、搜索、筛选、重新载入参数、下载、删除和清空。清空历史只影响 IndexedDB 图库，不会清除 API Key。
 

@@ -6,7 +6,7 @@ describe('loadConfig', () => {
     VITE_SUB2API_BASE_URL: 'https://api.example.com',
     VITE_APP_TITLE: '测试站',
     VITE_HISTORY_MAX_ITEMS: '100',
-    VITE_HISTORY_MAX_BYTES: '1048576000',
+    VITE_HISTORY_MAX_BYTES: '5368709120',
     VITE_REMEMBER_KEY_ENABLED: 'false',
   }
 
@@ -15,7 +15,7 @@ describe('loadConfig', () => {
     expect(config.sub2apiBaseUrl).toBe('https://api.example.com')
     expect(config.appTitle).toBe('测试站')
     expect(config.historyMaxItems).toBe(100)
-    expect(config.historyMaxBytes).toBe(1048576000)
+    expect(config.historyMaxBytes).toBe(5368709120)
     expect(config.rememberKeyEnabled).toBe(false)
     expect(config.configError).toBeNull()
   })
@@ -99,7 +99,7 @@ describe('loadConfig', () => {
 
   it('uses default history max bytes when missing', () => {
     const config = loadConfig({ VITE_SUB2API_BASE_URL: 'https://api.example.com' })
-    expect(config.historyMaxBytes).toBe(524288000)
+    expect(config.historyMaxBytes).toBe(5368709120)
   })
 
   it('uses default history max bytes for invalid value', () => {
@@ -107,7 +107,7 @@ describe('loadConfig', () => {
       VITE_SUB2API_BASE_URL: 'https://api.example.com',
       VITE_HISTORY_MAX_BYTES: 'not-a-number',
     })
-    expect(config.historyMaxBytes).toBe(524288000)
+    expect(config.historyMaxBytes).toBe(5368709120)
   })
 
   it('uses default remember key enabled when missing', () => {

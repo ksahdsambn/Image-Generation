@@ -9,7 +9,7 @@ export interface AppConfig {
 
 const DEFAULT_APP_TITLE = 'GPT Image 2 生图站'
 const DEFAULT_HISTORY_MAX_ITEMS = 50
-const DEFAULT_HISTORY_MAX_BYTES = 524288000
+const DEFAULT_HISTORY_MAX_BYTES = 5368709120
 const DEFAULT_REMEMBER_KEY_ENABLED = true
 
 function normalizeBaseUrl(url: string | undefined): string {

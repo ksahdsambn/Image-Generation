@@ -11,6 +11,13 @@ import {
 } from '@/types/generation'
 
 const store = useGenerationParamsStore()
+
+const qualityLabels: Record<string, string> = {
+  auto: '自动',
+  low: '低清',
+  medium: '中等',
+  high: '高清',
+}
 </script>
 
 <template>
@@ -79,7 +86,7 @@ const store = useGenerationParamsStore()
           class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           data-testid="quality-select"
         >
-          <option v-for="q in IMAGE_QUALITIES" :key="q" :value="q">{{ q === 'auto' ? '自动' : q === 'high' ? '高清' : '低清' }}</option>
+          <option v-for="q in IMAGE_QUALITIES" :key="q" :value="q">{{ qualityLabels[q] }}</option>
         </select>
       </div>
 

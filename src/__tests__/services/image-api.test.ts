@@ -5,7 +5,7 @@ vi.mock('@/utils/config', () => ({
     sub2apiBaseUrl: 'https://api.example.com',
     appTitle: 'Test',
     historyMaxItems: 50,
-    historyMaxBytes: 524288000,
+    historyMaxBytes: 5368709120,
     rememberKeyEnabled: true,
     configError: null,
   })),
@@ -216,7 +216,7 @@ describe('sendGenerationsRequest', () => {
       sub2apiBaseUrl: '',
       appTitle: 'Test',
       historyMaxItems: 50,
-      historyMaxBytes: 524288000,
+      historyMaxBytes: 5368709120,
       rememberKeyEnabled: true,
       configError: '缺少 Sub2API 后端地址配置',
     })

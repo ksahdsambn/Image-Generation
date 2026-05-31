@@ -55,12 +55,13 @@ describe('generation types', () => {
   describe('isValidQuality', () => {
     it('accepts valid qualities', () => {
       expect(isValidQuality('auto')).toBe(true)
-      expect(isValidQuality('high')).toBe(true)
       expect(isValidQuality('low')).toBe(true)
+      expect(isValidQuality('medium')).toBe(true)
+      expect(isValidQuality('high')).toBe(true)
     })
 
     it('rejects invalid qualities', () => {
-      expect(isValidQuality('medium')).toBe(false)
+      expect(isValidQuality('standard')).toBe(false)
       expect(isValidQuality('')).toBe(false)
     })
   })

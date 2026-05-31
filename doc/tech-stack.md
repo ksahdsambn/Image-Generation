@@ -61,7 +61,7 @@
 - `VITE_SUB2API_BASE_URL`：固定 Sub2API 后端地址。
 - `VITE_APP_TITLE`：站点标题。
 - `VITE_HISTORY_MAX_ITEMS`：本地图库最大图片数，默认 50。
-- `VITE_HISTORY_MAX_BYTES`：本地图库最大容量，默认 500MB。
+- `VITE_HISTORY_MAX_BYTES`：本地图库最大容量，默认 5GiB。
 - `VITE_REMEMBER_KEY_ENABLED`：是否允许用户记住 API Key。
 
 ### UI Libraries

@@ -69,7 +69,7 @@ zhipuai-coding-plan/glm-5.1
   - 统一读取 VITE_SUB2API_BASE_URL、VITE_APP_TITLE、VITE_HISTORY_MAX_ITEMS、VITE_HISTORY_MAX_BYTES、VITE_REMEMBER_KEY_ENABLED
   - Base URL 缺失时返回 configError，不发送任何请求
   - Base URL 自动移除末尾斜杠
-  - 非法配置值回退到默认值 (数量 50, 容量 500MB, 记住密钥 true)
+  - 非法配置值回退到默认值 (数量 50, 容量 5GiB, 记住密钥 true)
 - 测试结果:
   - 单元测试: 19 项通过 (config.test.ts)
   - 覆盖: Base URL 缺失/空值/空白、末尾斜杠规范化、默认值回退、非法值回退
@@ -280,7 +280,7 @@ zhipuai-coding-plan/glm-5.1
 - AI 模型: zhipuai-coding-plan/glm-5.1
 - 操作内容:
   - 创建 `src/storage/history-cleaner.ts` — enforceHistoryLimits()
-  - 数量上限 50 条 + 容量上限 500MB, 优先保留最新
+  - 数量上限 50 条 + 容量上限 5GiB, 优先保留最新
 - 测试结果:
   - history-cleaner.test.ts: 7 项通过
 
@@ -371,7 +371,7 @@ zhipuai-coding-plan/glm-5.1
   - Prompt 多行输入 + 必填校验
   - 尺寸选择器 (1024x1024, 1536x1024, 1024x1536)
   - 数量步进器 (+/- 按钮, 范围 1-10)
-  - 质量选择器 (自动/高清/低清)
+  - 质量选择器 (自动/低清/中等/高清)
   - 背景选择器 (自动/透明/不透明)
   - 输出格式选择器 (PNG/WebP/JPEG)
   - 压缩比例输入 (仅 webp/jpeg 时显示)
@@ -722,7 +722,7 @@ zhipuai-coding-plan/glm-5.1
     - `VITE_SUB2API_BASE_URL=https://uxde.de`
     - `VITE_APP_TITLE=GPT Image 2 生图站`
     - `VITE_HISTORY_MAX_ITEMS=50`
-    - `VITE_HISTORY_MAX_BYTES=524288000`
+    - `VITE_HISTORY_MAX_BYTES=5368709120`
     - `VITE_REMEMBER_KEY_ENABLED=true`
   - 修复 `e2e/app.spec.ts` 中 API Key 安全测试的旧示例域名断言，改为校验当前生产 Sub2API origin: `https://uxde.de`。
   - 调整 `playwright.config.ts`，支持 `PLAYWRIGHT_SKIP_WEBSERVER=1` 时复用外部已启动服务，并把 baseURL 固定为 `http://127.0.0.1:5173`。
