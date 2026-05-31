@@ -56,3 +56,17 @@
   - 构建产物扫描: 未发现真实 API Key、测试 API Key、测试响应或测试图片文件；`Authorization`、`Bearer`、`b64_json` 为运行时请求字段，`localhost` 为 URL 安全校验文本。
 - 后续:
   - 部署到 Cloudflare Pages 后执行正式域名冒烟测试和 CORS 验证。
+
+## 2026-05-31 部署前审查 Findings 闭环复核
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 按发布负责人部署前审查 Findings 做发布前闭环复核；未部署，未推进任务清单。
+- 复核内容:
+  - Git 工作区在本次记录追加前已确认无待提交源码变更，避免 Cloudflare Pages Git 集成部署时出现本地审查版本与线上构建版本不一致。
+  - `git ls-files -- 'test-results/*'` 无输出，确认 Playwright 运行产物已不再被版本控制跟踪。
+  - `.gitignore` 已覆盖 `dist`、`test-results`、`playwright-report`；当前 `test-results/.last-run.json` 为被忽略的本地测试产物。
+  - 生产配置、部署平台、Sub2API Base URL、正式域名和 CORS 说明沿用 README 与环境文件中的发布配置，未发现新的部署阻断项。
+- 验证:
+  - `npm.cmd test -- --run`: 26 files / 431 tests passed。
+  - `npm.cmd run build`: passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
