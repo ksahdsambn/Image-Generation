@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { useApiKeyStore } from '@/stores/api-key'
-import { Eye, EyeOff, X as XIcon, KeyRound } from '@lucide/vue'
+import { useConnectionStore } from '@/stores/connection'
+import { Eye, EyeOff, X as XIcon, KeyRound, Wifi, WifiOff, Loader2, CheckCircle2 } from '@lucide/vue'
 import { loadConfig } from '@/utils/config'
 
 const apiKeyStore = useApiKeyStore()
+const connectionStore = useConnectionStore()
 const config = loadConfig()
 const rememberEnabled = config.rememberKeyEnabled
+
+async function handleTestConnection() {
+  if (!apiKeyStore.hasKey) return
+  await connectionStore.runTest(apiKeyStore.apiKey)
+}
 </script>
 
 <template>
@@ -17,7 +24,7 @@ const rememberEnabled = config.rememberKeyEnabled
           ref="_inputRef"
           :type="apiKeyStore.visible ? 'text' : 'password'"
           :value="apiKeyStore.apiKey"
-          @input="apiKeyStore.setApiKey(($event.target as HTMLInputElement).value)"
+          @input="apiKeyStore.setApiKey(($event.target as HTMLInputElement).value); connectionStore.reset()"
           placeholder="输入 API Key"
           class="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-1.5 text-sm pr-16 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           data-testid="api-key-input"
@@ -36,7 +43,7 @@ const rememberEnabled = config.rememberKeyEnabled
           </button>
           <button
             v-if="apiKeyStore.hasKey"
-            @click="apiKeyStore.clearApiKey()"
+            @click="apiKeyStore.clearApiKey(); connectionStore.reset()"
             class="p-1 rounded hover:bg-gray-200 text-gray-500"
             aria-label="清除密钥"
             data-testid="clear-key-btn"
@@ -46,6 +53,26 @@ const rememberEnabled = config.rememberKeyEnabled
           </button>
         </div>
       </div>
+      <button
+        v-if="apiKeyStore.hasKey"
+        @click="handleTestConnection()"
+        :disabled="connectionStore.status === 'testing'"
+        class="shrink-0 p-1.5 rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+        :aria-label="connectionStore.status === 'testing' ? '测试连接中' : '测试连接'"
+        data-testid="test-connection-btn"
+        type="button"
+      >
+        <Loader2 v-if="connectionStore.status === 'testing'" :size="14" class="animate-spin text-blue-500" />
+        <CheckCircle2 v-else-if="connectionStore.status === 'connected'" :size="14" class="text-green-500" />
+        <WifiOff v-else-if="connectionStore.status === 'error'" :size="14" class="text-red-500" />
+        <Wifi v-else :size="14" class="text-gray-500" />
+      </button>
+    </div>
+    <div v-if="connectionStore.status === 'connected'" class="mt-1 text-xs text-green-600" data-testid="connection-ok">
+      连接正常
+    </div>
+    <div v-if="connectionStore.status === 'error' && connectionStore.error" class="mt-1 text-xs text-red-600" data-testid="connection-error">
+      {{ connectionStore.error.userMessage }}
     </div>
     <div v-if="rememberEnabled" class="mt-1.5 flex items-center gap-2">
       <label class="flex items-center gap-1.5 text-xs text-gray-500 cursor-pointer">

@@ -25,6 +25,8 @@ src/
 │   ├── error-handler.test.ts # 错误分类和脱敏单元测试 (25 项)
 │   ├── generation-types.test.ts # 生成参数类型校验单元测试 (23 项)
 │   ├── image-utils.test.ts # 图片转换工具单元测试 (14 项)
+│   ├── security-protection.test.ts # 敏感信息保护单元测试 (17 项)
+│   ├── storage-degradation.test.ts # 本地存储异常降级单元测试 (8 项)
 │   ├── stores/             # Pinia 状态模块测试
 │   │   ├── api-key.test.ts         # API Key 状态单元测试 (14 项)
 │   │   └── generation-params.test.ts # 生成参数状态单元测试 (31 项)
@@ -47,7 +49,7 @@ src/
 │       └── HistoryPanel.test.ts    # 本地历史面板测试 (11 项)
 ├── assets/          # 静态资源 (图片、字体等)
 ├── components/      # 可复用 Vue 组件
-│   ├── ApiKeyInput.vue        # API Key 配置组件 (输入/显示隐藏/清除/记住密钥)
+│   ├── ApiKeyInput.vue        # API Key 配置组件 (输入/显示隐藏/清除/记住密钥/连接测试按钮/连接状态)
 │   ├── GenerationForm.vue     # 生成参数表单 (Prompt/尺寸/数量/质量/背景/格式/压缩)
 │   ├── ReferenceImages.vue    # 参考图上传/URL组件 (本地图片/网页URL/冲突检测)
 │   ├── MaskImageInput.vue     # 遮罩图输入组件 (文件上传/URL输入)
@@ -58,7 +60,8 @@ src/
 │   └── Workbench.vue          # 主工作台页面 (三栏布局/生成按钮/配置错误提示)
 ├── services/        # API 服务层 (Sub2API 请求构建)
 │   ├── image-api.ts           # 图片 API 服务 (文生图/改图 multipart/改图 JSON/模式决策/文件校验)
-│   └── response-parser.ts     # 响应解析 (b64_json→Blob/MIME推断/对象URL管理)
+│   ├── response-parser.ts     # 响应解析 (b64_json→Blob/MIME推断/对象URL管理)
+│   └── connection-test.ts     # 连接测试服务 (GET /v1/models 只读检测/认证校验/CORS检测)
 ├── storage/         # IndexedDB 本地存储层 (Dexie.js)
 │   ├── database.ts              # IndexedDB 数据库初始化/单例/可用性检测
 │   ├── history-writer.ts        # 历史写入服务 (缩略图生成/单张批量写入)
@@ -68,7 +71,8 @@ src/
 │   └── storage-availability.ts  # 存储可用性检测 (降级提示)
 ├── stores/          # Pinia 状态管理模块
 │   ├── api-key.ts           # API Key 状态管理 (会话/记住/显示隐藏/清除)
-│   └── generation-params.ts # 生成参数状态管理 (Prompt/尺寸/数量/质量/格式/参考图/遮罩)
+│   ├── generation-params.ts # 生成参数状态管理 (Prompt/尺寸/数量/质量/格式/参考图/遮罩)
+│   └── generation.ts        # 生成状态管理 (generate动作/请求模式选择/结果管理/历史写入/对象URL释放)
 ├── types/           # TypeScript 类型定义
 │   ├── api.ts                 # API 请求/响应类型 (ApiResponse/RequestMode/ParsedImageResult)
 │   ├── errors.ts            # 错误分类模型 (11 种错误码 + 脱敏工具函数)
@@ -103,7 +107,9 @@ src/
 | `src/types/generation.ts` | 生成参数类型定义 (尺寸/质量/背景/格式常量)、校验函数 (isValidSize/isValidCount/validatePrompt) |
 | `src/stores/api-key.ts` | Pinia API Key 状态管理：sessionStorage 默认保存、localStorage 记住、显示隐藏、清除、脱敏 |
 | `src/stores/generation-params.ts` | Pinia 生成参数状态管理：Prompt/尺寸/数量/质量/背景/格式/压缩/参考图/遮罩，请求体构建，参数重置 |
-| `src/stores/generation.ts` | Pinia 生成状态管理：isGenerating/currentResults/error/loading/results/error 状态切换、结果管理、对象URL释放 |
+| `src/stores/connection.ts` | Pinia 连接状态管理：idle/testing/connected/error 四态、runTest() 执行测试、reset() 重置 (API Key 变更时) |
+| `src/services/connection-test.ts` | 连接测试服务：GET /v1/models 只读检测、Bearer 认证校验、不消耗图片额度、全局错误分类 |
+| `src/stores/generation.ts` | Pinia 生成状态管理：generate() 核心动作 (模式选择/API调用/响应解析/历史写入/自动清理)、isGenerating/currentResults/error/storageWarning 状态管理、对象URL释放 |
 | `src/types/api.ts` | API 请求/响应类型定义：ApiResponse (data 数组)、RequestMode (4 种模式)、ParsedImageResult (Blob+MIME+revisedPrompt+objectUrl) |
 | `src/services/image-api.ts` | 图片 API 服务核心模块：文生图 JSON 请求、本地参考图 multipart 请求、网页 URL JSON edits 请求、模式决策、文件/URL 校验、Bearer 认证、全局错误分类 |
 | `src/services/response-parser.ts` | 响应解析模块：b64_json→Blob 转换、MIME 推断、revised_prompt 提取、对象 URL 创建与释放 |
@@ -114,7 +120,7 @@ src/
 | `src/components/ReferenceImages.vue` | 参考图组件：本地上传+预览、网页URL添加删除、混用冲突警告、文件校验 |
 | `src/components/MaskImageInput.vue` | 遮罩图组件：文件上传/URL输入、预览、清除 |
 | `src/components/ResultGrid.vue` | 结果展示：空/加载/错误/成功四态、图片网格、下载/复制/移除、下载全部 |
-| `src/components/HistoryPanel.vue` | 历史面板：搜索/日期筛选、缩略图列表、参数重载/下载/删除/清空、大图模态框、分页 |
+| `src/components/HistoryPanel.vue` | 历史面板：搜索/日期筛选、缩略图列表、参数重载/下载/删除/清空、大图模态框、分页、watch lastGenerationTime 自动刷新 |
 | `src/__tests__/config.test.ts` | 配置读取层单元测试：环境变量解析、默认值、Base URL 校验、非法值回退 |
 | `src/__tests__/error-handler.test.ts` | 错误分类单元测试：HTTP 状态映射、网络错误分类、API Key 脱敏 |
 | `src/__tests__/generation-types.test.ts` | 生成参数类型单元测试：尺寸/数量/质量/背景/格式校验 |
@@ -143,6 +149,13 @@ src/
 | `src/__tests__/components/ReferenceImages.test.ts` | 参考图和遮罩图测试：上传预览/移除/校验/URL/冲突/遮罩 (19 项) |
 | `src/__tests__/components/ResultGrid.test.ts` | 结果展示测试：四态/网格/下载/复制/移除/可访问性 (10 项) |
 | `src/__tests__/components/HistoryPanel.test.ts` | 历史面板测试：搜索/筛选/空状态/重载/删除/清空/存储降级 (11 项) |
+| `src/__tests__/stores/generation.test.ts` | 生成流程集成测试：提交决策(4场景)/请求模式选择(3模式)/错误处理(6类)/历史写入/存储警告/状态管理 (26 项) |
+| `src/__tests__/services/connection-test.test.ts` | 连接测试服务单元测试：空Key拒绝/URL和请求头/成功失败/CORS网络/不调图片接口 (8 项) |
+| `src/__tests__/stores/connection.test.ts` | 连接状态管理测试：idle/testing/connected/error四态/reset/错误清除 (6 项) |
+| `src/__tests__/security-protection.test.ts` | 敏感信息保护测试：历史记录安全/下载安全/错误脱敏/控制台无泄露/API Key隔离 (17 项) |
+| `src/__tests__/storage-degradation.test.ts` | 本地存储异常降级测试：存储不可用提示/写入失败保留结果/全部失败提示清空/容量清理/网络错误隔离 (8 项) |
+| `playwright.config.ts` | Playwright E2E 测试配置：chromium 浏览器、dev server 启动、截图和视频录制 |
+| `e2e/app.spec.ts` | 浏览器端端到端测试 (16 项)：主流程/连接检查/API Key 安全/桌面移动平板布局/CORS错误/大图预览 |
 
 ## 环境变量
 

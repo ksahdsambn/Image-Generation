@@ -51,6 +51,13 @@ function downloadAll() {
       </div>
     </div>
 
+    <div v-if="generationStore.storageWarning" class="p-3 rounded-md bg-amber-50 text-amber-700 text-sm mb-3" data-testid="storage-warning">
+      <div class="flex items-start gap-2">
+        <AlertCircle :size="16" class="shrink-0 mt-0.5" />
+        <span>{{ generationStore.storageWarning.userMessage }}</span>
+      </div>
+    </div>
+
     <div v-else-if="generationStore.isGenerating" class="flex flex-col items-center justify-center py-12 text-gray-400" data-testid="loading-state">
       <div class="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mb-3"></div>
       <p class="text-sm">图片生成中，请稍候...</p>
@@ -92,8 +99,8 @@ function downloadAll() {
             :alt="'生成结果 ' + (index + 1)"
             class="w-full aspect-square object-contain bg-gray-50"
           />
-          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div class="flex items-center justify-end gap-1">
+          <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            <div class="flex items-center justify-center sm:justify-end gap-1">
               <button
                 @click="downloadImage(index)"
                 class="p-1.5 rounded-md bg-white/90 text-gray-700 hover:bg-white"

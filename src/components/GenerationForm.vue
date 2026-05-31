@@ -33,7 +33,7 @@ const store = useGenerationParamsStore()
       </p>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <label for="size-select" class="block text-xs font-medium text-gray-600 mb-1">尺寸</label>
         <select
@@ -69,7 +69,7 @@ const store = useGenerationParamsStore()
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <label for="quality-select" class="block text-xs font-medium text-gray-600 mb-1">质量</label>
         <select
@@ -97,7 +97,7 @@ const store = useGenerationParamsStore()
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
         <label for="format-select" class="block text-xs font-medium text-gray-600 mb-1">输出格式</label>
         <select

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useGenerationParamsStore } from '@/stores/generation-params'
+import { useGenerationStore } from '@/stores/generation'
 import { queryHistory, getHistoryById } from '@/storage/history-reader'
 import { deleteHistoryRecord, clearAllHistory } from '@/storage/history-deleter'
 import { checkStorageAvailability } from '@/storage/storage-availability'
@@ -9,6 +10,7 @@ import { Search, Download, Trash2, RotateCcw, Trash, ImageIcon, AlertTriangle, C
 import { generateFilename } from '@/utils/image-utils'
 
 const paramsStore = useGenerationParamsStore()
+const generationStore = useGenerationStore()
 
 const storageAvailable = ref<boolean | null>(null)
 const storageMessage = ref('')
@@ -28,6 +30,12 @@ onMounted(async () => {
   storageAvailable.value = check.available
   storageMessage.value = check.message || ''
   if (check.available) {
+    await loadHistory()
+  }
+})
+
+watch(() => generationStore.lastGenerationTime, async (newVal) => {
+  if (newVal && storageAvailable.value) {
     await loadHistory()
   }
 })

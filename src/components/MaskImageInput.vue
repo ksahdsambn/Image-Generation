@@ -82,10 +82,10 @@ function clearMask() {
         @change="handleFileSelect"
         data-testid="mask-file-input"
       />
-      <div class="flex gap-2">
+      <div class="flex flex-col sm:flex-row gap-2">
         <button
           @click="fileInputRef?.click()"
-          class="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-md border border-gray-300 text-xs text-gray-500 hover:bg-gray-50"
+          class="flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-md border border-gray-300 text-xs text-gray-500 hover:bg-gray-50"
           type="button"
           data-testid="upload-mask-btn"
           aria-label="上传遮罩图"

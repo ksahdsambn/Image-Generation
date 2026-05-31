@@ -21,8 +21,8 @@ const canGenerate = computed(() => {
   return apiKeyStore.hasKey && paramsStore.canSubmit && !generationStore.isGenerating
 })
 
-function handleGenerate() {
-  // Placeholder - will be implemented in Step 22 (flow integration)
+async function handleGenerate() {
+  await generationStore.generate(apiKeyStore, paramsStore)
 }
 </script>
 
@@ -33,9 +33,9 @@ function handleGenerate() {
     </header>
 
     <header v-else class="border-b border-gray-200 bg-white px-4 py-3">
-      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <h1 class="text-lg font-semibold text-gray-900 shrink-0">{{ config.appTitle }}</h1>
-        <div class="flex-1 max-w-md">
+        <div class="w-full sm:flex-1 sm:max-w-md">
           <ApiKeyInput />
         </div>
       </div>

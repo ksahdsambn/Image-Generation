@@ -3,6 +3,7 @@ import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import ApiKeyInput from '@/components/ApiKeyInput.vue'
 import { useApiKeyStore } from '@/stores/api-key'
+import { useConnectionStore } from '@/stores/connection'
 
 let pinia: ReturnType<typeof createPinia>
 
@@ -114,5 +115,73 @@ describe('ApiKeyInput (Step 17)', () => {
     expect(text).not.toContain('sk-very-long-secret-key-12345')
     const input = wrapper.find('[data-testid="api-key-input"]')
     expect(input.attributes('type')).toBe('password')
+  })
+})
+
+describe('ApiKeyInput - Connection Test (Step 23)', () => {
+  beforeEach(() => {
+    pinia = createPinia()
+    setActivePinia(pinia)
+  })
+
+  it('shows test connection button when key exists', async () => {
+    const wrapper = mountApiKeyInput()
+    const store = useApiKeyStore()
+    store.setApiKey('sk-test-key')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="test-connection-btn"]').exists()).toBe(true)
+  })
+
+  it('hides test connection button when no key', async () => {
+    const wrapper = mountApiKeyInput()
+    const store = useApiKeyStore()
+    store.clearApiKey()
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="test-connection-btn"]').exists()).toBe(false)
+  })
+
+  it('test connection button has accessible label', async () => {
+    const wrapper = mountApiKeyInput()
+    const store = useApiKeyStore()
+    store.setApiKey('sk-test-key')
+    await wrapper.vm.$nextTick()
+    const btn = wrapper.find('[data-testid="test-connection-btn"]')
+    expect(btn.attributes('aria-label')).toBeTruthy()
+  })
+
+  it('shows connection ok message on successful test', async () => {
+    const wrapper = mountApiKeyInput()
+    const apiKeyStore = useApiKeyStore()
+    const connectionStore = useConnectionStore()
+    apiKeyStore.setApiKey('sk-test-key-1234567890')
+    connectionStore.status = 'connected'
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="connection-ok"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="connection-ok"]').text()).toContain('连接正常')
+  })
+
+  it('shows error message on failed test', async () => {
+    const wrapper = mountApiKeyInput()
+    const apiKeyStore = useApiKeyStore()
+    const connectionStore = useConnectionStore()
+    apiKeyStore.setApiKey('sk-test-key-1234567890')
+    connectionStore.status = 'error'
+    connectionStore.error = { code: 'AUTH_FAILED', userMessage: 'API Key 无效', debugHint: '' }
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="connection-error"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="connection-error"]').text()).toContain('API Key 无效')
+  })
+
+  it('resets connection status when API Key changes', async () => {
+    const wrapper = mountApiKeyInput()
+    const apiKeyStore = useApiKeyStore()
+    const connectionStore = useConnectionStore()
+    apiKeyStore.setApiKey('sk-test-key-1234567890')
+    connectionStore.status = 'connected'
+    await wrapper.vm.$nextTick()
+
+    const input = wrapper.find('[data-testid="api-key-input"]')
+    await input.setValue('sk-new-key')
+    expect(connectionStore.status).toBe('idle')
   })
 })
