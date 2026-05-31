@@ -11,7 +11,7 @@ describe('useGenerationParamsStore', () => {
   it('initializes with default values', () => {
     const store = useGenerationParamsStore()
     expect(store.prompt).toBe('')
-    expect(store.size).toBe('1024x1024')
+    expect(store.size).toBe('auto')
     expect(store.n).toBe(1)
     expect(store.quality).toBe('auto')
     expect(store.background).toBe('auto')
@@ -25,7 +25,7 @@ describe('useGenerationParamsStore', () => {
   it('rejects invalid size', () => {
     const store = useGenerationParamsStore()
     store.setSize('512x512')
-    expect(store.size).toBe('1024x1024')
+    expect(store.size).toBe('auto')
   })
 
   it('accepts valid size', () => {
@@ -234,7 +234,7 @@ describe('useGenerationParamsStore', () => {
     store.addWebImageUrl('https://example.com/img.png')
     store.resetParams()
     expect(store.prompt).toBe('')
-    expect(store.size).toBe('1024x1024')
+    expect(store.size).toBe('auto')
     expect(store.n).toBe(1)
     expect(store.outputFormat).toBe('png')
     expect(store.localImages).toHaveLength(0)

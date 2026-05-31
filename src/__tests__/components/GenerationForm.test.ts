@@ -4,7 +4,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import GenerationForm from '@/components/GenerationForm.vue'
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import {
-  IMAGE_SIZES,
+  IMAGE_SIZE_OPTIONS,
   IMAGE_QUALITIES,
   IMAGE_BACKGROUNDS,
   OUTPUT_FORMATS,
@@ -44,8 +44,9 @@ describe('GenerationForm (Step 18)', () => {
     const wrapper = mountForm()
     const select = wrapper.find('[data-testid="size-select"]')
     expect(select.exists()).toBe(true)
-    for (const s of IMAGE_SIZES) {
-      expect(select.html()).toContain(s)
+    for (const option of IMAGE_SIZE_OPTIONS) {
+      expect(select.html()).toContain(option.value)
+      expect(select.text()).toContain(option.label.trim())
     }
   })
 

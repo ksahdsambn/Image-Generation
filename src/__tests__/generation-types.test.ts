@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import {
   IMAGE_SIZES,
+  IMAGE_SIZE_OPTIONS,
   MODEL,
   RESPONSE_FORMAT,
+  DEFAULT_IMAGE_SIZE,
   MIN_IMAGE_COUNT,
   MAX_IMAGE_COUNT,
   isValidSize,
@@ -18,14 +20,21 @@ import {
 describe('generation types', () => {
   describe('isValidSize', () => {
     it('accepts valid sizes', () => {
+      expect(isValidSize('auto')).toBe(true)
       expect(isValidSize('1024x1024')).toBe(true)
       expect(isValidSize('1536x1024')).toBe(true)
       expect(isValidSize('1024x1536')).toBe(true)
+      expect(isValidSize('2048x2048')).toBe(true)
+      expect(isValidSize('2048x1152')).toBe(true)
+      expect(isValidSize('1152x2048')).toBe(true)
+      expect(isValidSize('3840x2160')).toBe(true)
+      expect(isValidSize('2160x3840')).toBe(true)
+      expect(isValidSize('2880x2880')).toBe(true)
     })
 
     it('rejects invalid sizes', () => {
       expect(isValidSize('512x512')).toBe(false)
-      expect(isValidSize('2048x2048')).toBe(false)
+      expect(isValidSize('2048x1536')).toBe(false)
       expect(isValidSize('')).toBe(false)
     })
   })
@@ -126,9 +135,32 @@ describe('generation types', () => {
     })
 
     it('IMAGE_SIZES has expected values', () => {
+      expect(IMAGE_SIZES).toContain('auto')
       expect(IMAGE_SIZES).toContain('1024x1024')
       expect(IMAGE_SIZES).toContain('1536x1024')
       expect(IMAGE_SIZES).toContain('1024x1536')
+      expect(IMAGE_SIZES).toContain('2048x2048')
+      expect(IMAGE_SIZES).toContain('2048x1152')
+      expect(IMAGE_SIZES).toContain('1152x2048')
+      expect(IMAGE_SIZES).toContain('3840x2160')
+      expect(IMAGE_SIZES).toContain('2160x3840')
+      expect(IMAGE_SIZES).toContain('2880x2880')
+    })
+
+    it('IMAGE_SIZE_OPTIONS exposes user-facing labels', () => {
+      expect(DEFAULT_IMAGE_SIZE).toBe('auto')
+      expect(IMAGE_SIZE_OPTIONS).toEqual([
+        { value: 'auto', label: '自动' },
+        { value: '1024x1024', label: '1K 方形 1:1      1024x1024' },
+        { value: '1536x1024', label: '1K 横版 3:2      1536x1024' },
+        { value: '1024x1536', label: '1K 竖版 2:3      1024x1536' },
+        { value: '2048x2048', label: '2K 方形 1:1      2048x2048' },
+        { value: '2048x1152', label: '2K 宽屏 16:9     2048x1152' },
+        { value: '1152x2048', label: '2K 故事版 9:16   1152x2048' },
+        { value: '3840x2160', label: '4K 横版 16:9     3840x2160' },
+        { value: '2160x3840', label: '4K 竖版 9:16     2160x3840' },
+        { value: '2880x2880', label: '4K 方形 1:1      2880x2880' },
+      ])
     })
 
     it('MIN_IMAGE_COUNT is 1', () => {

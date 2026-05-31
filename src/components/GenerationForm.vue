@@ -2,7 +2,7 @@
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import { RotateCcw } from '@lucide/vue'
 import {
-  IMAGE_SIZES,
+  IMAGE_SIZE_OPTIONS,
   IMAGE_QUALITIES,
   IMAGE_BACKGROUNDS,
   OUTPUT_FORMATS,
@@ -50,7 +50,9 @@ const qualityLabels: Record<string, string> = {
           class="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
           data-testid="size-select"
         >
-          <option v-for="s in IMAGE_SIZES" :key="s" :value="s">{{ s }}</option>
+          <option v-for="option in IMAGE_SIZE_OPTIONS" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
         </select>
       </div>
 

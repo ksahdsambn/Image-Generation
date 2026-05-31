@@ -70,3 +70,20 @@
   - `npm.cmd test -- --run`: 26 files / 431 tests passed。
   - `npm.cmd run build`: passed。
   - `npm.cmd run test:e2e`: 16 tests passed。
+
+## 2026-06-01 尺寸选择器选项更新
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 按用户要求更新图片生成尺寸下拉选项，默认尺寸改为自动。
+- 修改内容:
+  - `src/types/generation.ts`: 新增 `auto`、1K/2K/4K 全部指定尺寸枚举，新增 `IMAGE_SIZE_OPTIONS` 中文显示标签，默认尺寸改为 `auto`。
+  - `src/components/GenerationForm.vue`: 尺寸下拉改为展示“自动”和带分辨率说明的中文选项。
+  - `src/__tests__/generation-types.test.ts`: 覆盖新增尺寸合法性、默认值和中文标签。
+  - `src/__tests__/components/GenerationForm.test.ts`: 覆盖尺寸下拉 value 与中文 label。
+  - `src/__tests__/stores/generation-params.test.ts`: 更新默认尺寸与 reset 断言。
+- 验证:
+  - `npm.cmd test -- --run src/__tests__/generation-types.test.ts src/__tests__/stores/generation-params.test.ts src/__tests__/components/GenerationForm.test.ts`: 3 files / 74 tests passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run build`: passed。
+  - `npx.cmd --yes --package @playwright/cli playwright-cli snapshot`: 本地预览页尺寸下拉默认选中“自动”，并展示全部 10 个尺寸选项；已验证可选择 `3840x2160`。
+  - `npm.cmd run test:e2e`: 16 tests passed。
