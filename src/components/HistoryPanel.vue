@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
       <button
         v-if="historyResult.total > 0"
         @click="confirmClearAll()"
-        class="flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700"
+        class="flex min-h-8 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-500 hover:bg-red-50 hover:text-red-700"
         type="button"
         data-testid="clear-all-btn"
         aria-label="清空全部历史"
@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
           </div>
           <button
             @click="searchHistory()"
-            class="px-2.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 shadow-sm"
+            class="min-h-10 px-2.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 shadow-sm"
             type="button"
             aria-label="搜索"
           >搜索</button>
@@ -231,14 +231,14 @@ onBeforeUnmount(() => {
           <input
             v-model="startDate"
             type="date"
-            class="rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm"
+            class="min-h-9 rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm"
             data-testid="start-date"
             @change="searchHistory()"
           />
           <input
             v-model="endDate"
             type="date"
-            class="rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm"
+            class="min-h-9 rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm"
             data-testid="end-date"
             @change="searchHistory()"
           />
@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
         <div
           v-for="record in historyResult.records"
           :key="record.id"
-          class="flex gap-2 p-2 rounded-lg border border-stone-200 bg-[#fffdfa]/80 hover:border-teal-700/35 hover:bg-white cursor-pointer shadow-sm"
+          class="flex min-w-0 gap-2 p-2 rounded-lg border border-stone-200 bg-[#fffdfa]/80 hover:border-teal-700/35 hover:bg-white cursor-pointer shadow-sm"
           @click="selectedRecord = record"
           :class="{ 'border-teal-700/50 bg-teal-50/70 shadow-[0_10px_24px_rgb(18_126_115_/_0.12)]': selectedRecord?.id === record.id }"
           data-testid="history-item"
@@ -279,7 +279,7 @@ onBeforeUnmount(() => {
             <div class="flex items-center gap-1 mt-1">
               <button
                 @click.stop="reloadParams(record)"
-                class="p-1 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
+                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
                 type="button"
                 :aria-label="'重新载入参数'"
                 data-testid="reload-params-btn"
@@ -289,7 +289,7 @@ onBeforeUnmount(() => {
               </button>
               <button
                 @click.stop="downloadHistoryImage(record)"
-                class="p-1 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
+                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-700"
                 type="button"
                 :aria-label="'下载图片'"
                 data-testid="download-history-btn"
@@ -299,7 +299,7 @@ onBeforeUnmount(() => {
               </button>
               <button
                 @click.stop="confirmDelete(record.id!)"
-                class="p-1 rounded-md hover:bg-red-50 text-stone-400 hover:text-red-600"
+                class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-red-50 text-stone-400 hover:text-red-600"
                 type="button"
                 :aria-label="'删除记录'"
                 data-testid="delete-history-btn"
@@ -314,7 +314,7 @@ onBeforeUnmount(() => {
         <button
           v-if="historyResult.hasMore"
           @click="loadMore()"
-          class="w-full rounded-lg border border-stone-200 bg-white/70 py-2 text-xs font-medium text-teal-700 hover:bg-stone-100 hover:text-teal-800 flex items-center justify-center gap-1"
+          class="flex min-h-10 w-full items-center justify-center gap-1 rounded-lg border border-stone-200 bg-white/70 py-2 text-xs font-medium text-teal-700 hover:bg-stone-100 hover:text-teal-800"
           type="button"
           data-testid="load-more-btn"
         >
@@ -340,7 +340,7 @@ onBeforeUnmount(() => {
           <div class="absolute top-2 right-2 flex gap-1">
             <button
               @click="downloadFullImage()"
-              class="p-2 rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
               type="button"
               aria-label="下载图片"
             >
@@ -348,7 +348,7 @@ onBeforeUnmount(() => {
             </button>
             <button
               @click="closeFullImage()"
-              class="p-2 rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
+              class="flex h-9 w-9 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
               type="button"
               aria-label="关闭"
             >

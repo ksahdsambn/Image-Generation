@@ -33,7 +33,7 @@ async function handleTestConnection() {
         <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           <button
             @click="apiKeyStore.toggleVisible()"
-            class="p-1 rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800"
+            class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800"
             :aria-label="apiKeyStore.visible ? '隐藏密钥' : '显示密钥'"
             data-testid="toggle-visible-btn"
             type="button"
@@ -44,7 +44,7 @@ async function handleTestConnection() {
           <button
             v-if="apiKeyStore.hasKey"
             @click="apiKeyStore.clearApiKey(); connectionStore.reset()"
-            class="p-1 rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800"
+            class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800"
             aria-label="清除密钥"
             data-testid="clear-key-btn"
             type="button"
@@ -57,7 +57,7 @@ async function handleTestConnection() {
         v-if="apiKeyStore.hasKey"
         @click="handleTestConnection()"
         :disabled="connectionStore.status === 'testing'"
-        class="shrink-0 p-2 rounded-lg border border-stone-300 bg-white/80 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-white/80 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
         :aria-label="connectionStore.status === 'testing' ? '测试连接中' : '测试连接'"
         data-testid="test-connection-btn"
         type="button"
@@ -80,7 +80,7 @@ async function handleTestConnection() {
           type="checkbox"
           :checked="apiKeyStore.rememberKey"
           @change="apiKeyStore.setRememberKey(($event.target as HTMLInputElement).checked)"
-          class="rounded border-stone-300 text-teal-700 focus:ring-teal-700"
+          class="h-4 w-4 rounded border-stone-300 text-teal-700 focus:ring-teal-700"
           data-testid="remember-key-checkbox"
         />
         记住密钥

@@ -64,7 +64,7 @@ function clearMask() {
       </template>
       <button
         @click="clearMask()"
-        class="p-1 rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0"
+        class="flex h-7 w-7 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0"
         type="button"
         aria-label="移除遮罩图"
         data-testid="clear-mask-btn"
@@ -85,7 +85,7 @@ function clearMask() {
       <div class="flex flex-col sm:flex-row gap-2">
         <button
           @click="fileInputRef?.click()"
-          class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 shadow-sm"
+          class="flex min-h-10 items-center justify-center gap-1.5 py-2 px-3 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 shadow-sm"
           type="button"
           data-testid="upload-mask-btn"
           aria-label="上传遮罩图"
@@ -105,7 +105,7 @@ function clearMask() {
           <button
             @click="setMaskUrl()"
             :disabled="!maskUrlInput.trim()"
-            class="px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            class="min-w-12 px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             type="button"
             data-testid="set-mask-url-btn"
           >

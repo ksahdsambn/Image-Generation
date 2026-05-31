@@ -72,14 +72,14 @@ function downloadAll() {
     </div>
 
     <template v-else>
-      <div class="flex items-center justify-between gap-3 mb-3">
+      <div class="flex items-center justify-between gap-3 mb-3 min-w-0">
         <h2 class="text-sm font-semibold text-stone-700">
           生成结果 ({{ generationStore.currentResults.length }})
         </h2>
         <div class="flex items-center gap-2">
           <button
             @click="downloadAll()"
-            class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 shadow-sm"
+            class="flex min-h-8 items-center gap-1 px-2.5 py-1.5 rounded-lg border border-stone-200 bg-white/80 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 shadow-sm"
             type="button"
             data-testid="download-all-btn"
             aria-label="下载全部结果"
@@ -105,7 +105,7 @@ function downloadAll() {
             <div class="flex items-center justify-center sm:justify-end gap-1">
               <button
                 @click="downloadImage(index)"
-                class="p-1.5 rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
+                class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
                 type="button"
                 :aria-label="'下载结果 ' + (index + 1)"
                 data-testid="download-result-btn"
@@ -114,7 +114,7 @@ function downloadAll() {
               </button>
               <button
                 @click="copyImage(index)"
-                class="p-1.5 rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
+                class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
                 type="button"
                 :aria-label="'复制结果 ' + (index + 1)"
                 data-testid="copy-result-btn"
@@ -123,7 +123,7 @@ function downloadAll() {
               </button>
               <button
                 @click="generationStore.removeResult(index)"
-                class="p-1.5 rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
+                class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow"
                 type="button"
                 :aria-label="'移除结果 ' + (index + 1)"
                 data-testid="remove-result-btn"

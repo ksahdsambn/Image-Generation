@@ -1,5 +1,25 @@
 # 修复记录
 
+## 2026-06-01 UI 最终视觉润色
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `polish` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端做最终视觉细节润色；未修改 store、service、types、API 请求逻辑、状态管理、数据结构或核心功能行为；未调整页面主要三栏布局分配。
+- 修改内容:
+  - `src/style.css`: 补充统一的 studio 视觉 token、卡片/顶栏表面阴影、控件最小高度、按钮 focus-visible/active/disabled 状态、空/加载状态背景、历史与结果项 hover 质感、移动端控件高度和 `prefers-reduced-motion` 处理。
+  - `src/pages/Workbench.vue`: 在不改变三栏结构的前提下补充 `min-w-0` 溢出防护，并统一生成按钮最小高度。
+  - `src/components/GenerationForm.vue`: 优化数量步进器、计数显示和重置按钮的触控尺寸与对齐。
+  - `src/components/ApiKeyInput.vue`: 优化密钥输入内嵌图标按钮、连接测试按钮和记住密钥复选框尺寸。
+  - `src/components/ReferenceImages.vue`、`src/components/MaskImageInput.vue`: 优化上传、URL 添加/确认、移除按钮的尺寸和居中。
+  - `src/components/ResultGrid.vue`、`src/components/HistoryPanel.vue`: 优化结果操作按钮、历史搜索/日期输入、历史项操作按钮、加载更多和图片预览弹窗按钮的视觉一致性。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - Playwright CLI 桌面截图检查 `1280x800`: 三栏分配保持不变，未发现文字遮挡或水平溢出。
+  - Playwright CLI 移动全页截图检查 `375x812`: 页面按原结构纵向堆叠，未发现文字溢出、遮挡或横向滚动。
+  - 内置浏览器运行检查: document/body horizontal overflow 均为 0。
+
+
 ## 2026-05-31 Bug 审查 Findings 修复
 
 - 操作模型ID: GPT-5 Codex

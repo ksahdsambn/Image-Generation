@@ -97,7 +97,7 @@ function removeUrl(index: number) {
         <img :src="img.previewUrl" alt="参考图预览" class="w-full h-full object-cover" />
         <button
           @click="removeImage(index)"
-          class="absolute top-0.5 right-0.5 p-0.5 rounded-full bg-stone-950/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+          class="absolute top-0.5 right-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-stone-950/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
           type="button"
           :aria-label="'移除参考图 ' + (index + 1)"
         >
@@ -121,7 +121,7 @@ function removeUrl(index: number) {
         <button
           @click="addUrl"
           :disabled="!urlInput.trim() || store.hasLocalImages"
-          class="px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          class="min-w-10 px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           type="button"
           data-testid="add-url-btn"
           aria-label="添加图片 URL"
@@ -141,7 +141,7 @@ function removeUrl(index: number) {
         <span class="truncate flex-1 min-w-0">{{ item.url }}</span>
         <button
           @click="removeUrl(index)"
-          class="p-0.5 rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0"
+          class="flex h-6 w-6 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0"
           type="button"
           :aria-label="'移除 URL ' + (index + 1)"
         >

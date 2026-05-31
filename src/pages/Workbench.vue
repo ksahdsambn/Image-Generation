@@ -44,7 +44,7 @@ async function handleGenerate() {
 
     <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-4 lg:p-5">
       <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-5">
-        <section class="space-y-4 mb-4 lg:mb-0" aria-label="生成配置">
+        <section class="space-y-4 mb-4 lg:mb-0 min-w-0" aria-label="生成配置">
           <div class="studio-card p-4">
             <GenerationForm />
           </div>
@@ -57,7 +57,7 @@ async function handleGenerate() {
           <button
             @click="handleGenerate()"
             :disabled="!canGenerate"
-            class="studio-primary-button w-full py-2.5 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
+            class="studio-primary-button w-full min-h-11 py-2.5 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
             :class="canGenerate ? 'bg-[#d95c35] hover:bg-[#c84f2d]' : 'bg-stone-300 text-stone-500 cursor-not-allowed border-stone-300'"
             data-testid="generate-btn"
             :aria-label="generationStore.isGenerating ? '正在生成' : '生成图片'"
@@ -68,13 +68,13 @@ async function handleGenerate() {
           </button>
         </section>
 
-        <section class="mb-4 lg:mb-0" aria-label="生成结果">
-          <div class="studio-card p-4 min-h-[360px]">
+        <section class="mb-4 lg:mb-0 min-w-0" aria-label="生成结果">
+          <div class="studio-card p-4 min-h-[360px] min-w-0">
             <ResultGrid />
           </div>
         </section>
 
-        <section class="space-y-4" aria-label="密钥和本地历史" data-testid="right-rail">
+        <section class="space-y-4 min-w-0" aria-label="密钥和本地历史" data-testid="right-rail">
           <div class="studio-card p-4">
             <ApiKeyInput />
           </div>
