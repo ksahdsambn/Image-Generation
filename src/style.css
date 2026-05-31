@@ -1,1 +1,230 @@
 @import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light;
+    font-family:
+      "Aptos",
+      "Segoe UI Variable",
+      "Segoe UI",
+      "PingFang SC",
+      "Microsoft YaHei",
+      sans-serif;
+    background: #f4f1ea;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    background:
+      radial-gradient(circle at 12% 8%, rgb(234 98 66 / 0.14), transparent 30rem),
+      radial-gradient(circle at 88% 16%, rgb(24 145 132 / 0.16), transparent 28rem),
+      linear-gradient(135deg, #f8f5ee 0%, #ece7dc 48%, #f4f1ea 100%);
+  }
+
+  button,
+  input,
+  textarea,
+  select {
+    font: inherit;
+  }
+
+  ::selection {
+    background: rgb(225 96 58 / 0.22);
+    color: #211b16;
+  }
+}
+
+@layer components {
+  .studio-shell {
+    position: relative;
+    isolation: isolate;
+    overflow-x: hidden;
+    background:
+      linear-gradient(rgb(45 38 30 / 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(45 38 30 / 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .studio-shell::before {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(110deg, transparent 0 42%, rgb(255 255 255 / 0.54) 42% 43%, transparent 43%),
+      radial-gradient(circle at 70% 74%, rgb(25 110 101 / 0.09), transparent 22rem);
+    mask-image: linear-gradient(to bottom, black 0%, black 64%, transparent 100%);
+  }
+
+  .studio-topbar {
+    background: rgb(248 245 238 / 0.84);
+    border-color: rgb(63 54 43 / 0.14);
+    box-shadow: 0 18px 52px rgb(46 38 28 / 0.08);
+    backdrop-filter: blur(18px) saturate(1.12);
+  }
+
+  .studio-title {
+    letter-spacing: 0;
+    color: #211b16;
+  }
+
+  .studio-card {
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgb(255 253 248 / 0.94), rgb(248 245 238 / 0.9)),
+      linear-gradient(135deg, rgb(255 255 255 / 0.72), rgb(255 255 255 / 0));
+    border: 1px solid rgb(63 54 43 / 0.14);
+    border-radius: 8px;
+    box-shadow:
+      0 1px 0 rgb(255 255 255 / 0.8) inset,
+      0 18px 45px rgb(54 44 32 / 0.08);
+  }
+
+  .studio-card::before {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(90deg, rgb(224 93 55 / 0.2), transparent 28%),
+      linear-gradient(180deg, rgb(255 255 255 / 0.66), transparent 9rem);
+    opacity: 0.68;
+  }
+
+  .studio-card > * {
+    position: relative;
+  }
+
+  .studio-primary-button {
+    min-height: 44px;
+    border: 1px solid rgb(43 34 26 / 0.18);
+    box-shadow:
+      0 12px 28px rgb(225 96 58 / 0.26),
+      0 1px 0 rgb(255 255 255 / 0.24) inset;
+  }
+
+  .studio-primary-button:not(:disabled):hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 18px 36px rgb(225 96 58 / 0.32),
+      0 1px 0 rgb(255 255 255 / 0.28) inset;
+  }
+
+  .studio-primary-button:disabled {
+    box-shadow: none;
+  }
+
+  .generation-form label,
+  .reference-images h3,
+  .mask-image-input h3,
+  .history-panel h2,
+  .result-grid h2 {
+    letter-spacing: 0;
+    color: #342b22;
+  }
+
+  .generation-form textarea,
+  .generation-form input,
+  .generation-form select,
+  .api-key-area input,
+  .reference-images input,
+  .mask-image-input input,
+  .history-panel input {
+    color: #211b16;
+    background: rgb(255 253 248 / 0.84);
+    border-color: rgb(63 54 43 / 0.2);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset;
+    transition:
+      border-color 160ms ease,
+      box-shadow 160ms ease,
+      background-color 160ms ease,
+      transform 160ms ease;
+  }
+
+  .generation-form textarea:focus,
+  .generation-form input:focus,
+  .generation-form select:focus,
+  .api-key-area input:focus,
+  .reference-images input:focus,
+  .mask-image-input input:focus,
+  .history-panel input:focus {
+    background: #fffdfa;
+    border-color: rgb(18 126 115 / 0.72);
+    box-shadow:
+      0 0 0 3px rgb(18 126 115 / 0.13),
+      0 1px 0 rgb(255 255 255 / 0.9) inset;
+  }
+
+  .generation-form textarea::placeholder,
+  .api-key-area input::placeholder,
+  .reference-images input::placeholder,
+  .mask-image-input input::placeholder,
+  .history-panel input::placeholder {
+    color: rgb(88 77 65 / 0.58);
+  }
+
+  .generation-form button,
+  .api-key-area button,
+  .reference-images button,
+  .mask-image-input button,
+  .result-grid button,
+  .history-panel button {
+    transition:
+      color 150ms ease,
+      background-color 150ms ease,
+      border-color 150ms ease,
+      box-shadow 150ms ease,
+      transform 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .generation-form button:not(:disabled):hover,
+  .api-key-area button:not(:disabled):hover,
+  .reference-images button:not(:disabled):hover,
+  .mask-image-input button:not(:disabled):hover,
+  .result-grid button:not(:disabled):hover,
+  .history-panel button:not(:disabled):hover {
+    transform: translateY(-1px);
+  }
+
+  .reference-images [data-testid="upload-btn"] {
+    background:
+      linear-gradient(135deg, rgb(255 253 248 / 0.75), rgb(238 245 242 / 0.84)),
+      repeating-linear-gradient(-45deg, transparent 0 10px, rgb(18 126 115 / 0.045) 10px 20px);
+    border-color: rgb(18 126 115 / 0.3);
+    color: #4b4137;
+  }
+
+  .reference-images [data-testid="upload-btn"]:not(:disabled):hover {
+    border-color: rgb(18 126 115 / 0.58);
+    color: #127e73;
+    box-shadow: 0 12px 28px rgb(18 126 115 / 0.12);
+  }
+
+  .result-grid [data-testid="empty-state"],
+  .result-grid [data-testid="loading-state"],
+  .history-panel [data-testid="history-empty"],
+  .history-panel [data-testid="history-loading"] {
+    color: #796c5f;
+  }
+
+  .history-panel [data-testid="history-list"] {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(18 126 115 / 0.42) transparent;
+  }
+
+  .history-panel [data-testid="history-list"]::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .history-panel [data-testid="history-list"]::-webkit-scrollbar-thumb {
+    background: rgb(18 126 115 / 0.28);
+    border-radius: 999px;
+  }
+}

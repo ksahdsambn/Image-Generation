@@ -27,34 +27,38 @@ async function handleGenerate() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50 text-gray-900 flex flex-col">
-    <header v-if="config.configError" class="border-b border-red-200 bg-red-50 px-4 py-3">
-      <p class="text-sm text-red-700 text-center">{{ config.configError }}</p>
+  <div class="studio-shell min-h-screen text-stone-950 flex flex-col">
+    <header v-if="config.configError" class="border-b border-red-200 bg-red-50/95 px-4 py-3 shadow-sm">
+      <p class="text-sm font-medium text-red-700 text-center">{{ config.configError }}</p>
     </header>
 
-    <header v-else class="border-b border-gray-200 bg-white px-4 py-5">
-      <div class="max-w-7xl mx-auto">
-        <h1 class="text-lg font-semibold text-gray-900 shrink-0">{{ config.appTitle }}</h1>
+    <header v-else class="studio-topbar sticky top-0 z-20 border-b px-4 py-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+        <h1 class="studio-title text-lg sm:text-xl font-semibold shrink-0 truncate">{{ config.appTitle }}</h1>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-stone-500">
+          <span class="h-2 w-2 rounded-full bg-teal-600 shadow-[0_0_0_4px_rgb(18_126_115_/_0.12)]"></span>
+          GPT Image Studio
+        </div>
       </div>
     </header>
 
-    <main class="flex-1 max-w-7xl mx-auto w-full p-4">
-      <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-4">
+    <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-4 lg:p-5">
+      <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-5">
         <section class="space-y-4 mb-4 lg:mb-0" aria-label="生成配置">
-          <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="studio-card p-4">
             <GenerationForm />
           </div>
-          <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="studio-card p-4">
             <ReferenceImages />
           </div>
-          <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="studio-card p-4">
             <MaskImageInput />
           </div>
           <button
             @click="handleGenerate()"
             :disabled="!canGenerate"
-            class="w-full py-2.5 px-4 rounded-lg font-medium text-white transition-colors flex items-center justify-center gap-2"
-            :class="canGenerate ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-300 cursor-not-allowed'"
+            class="studio-primary-button w-full py-2.5 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
+            :class="canGenerate ? 'bg-[#d95c35] hover:bg-[#c84f2d]' : 'bg-stone-300 text-stone-500 cursor-not-allowed border-stone-300'"
             data-testid="generate-btn"
             :aria-label="generationStore.isGenerating ? '正在生成' : '生成图片'"
           >
@@ -65,16 +69,16 @@ async function handleGenerate() {
         </section>
 
         <section class="mb-4 lg:mb-0" aria-label="生成结果">
-          <div class="bg-white rounded-lg border border-gray-200 p-4 min-h-[300px]">
+          <div class="studio-card p-4 min-h-[360px]">
             <ResultGrid />
           </div>
         </section>
 
         <section class="space-y-4" aria-label="密钥和本地历史" data-testid="right-rail">
-          <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="studio-card p-4">
             <ApiKeyInput />
           </div>
-          <div class="bg-white rounded-lg border border-gray-200 p-4">
+          <div class="studio-card p-4">
             <HistoryPanel />
           </div>
         </section>

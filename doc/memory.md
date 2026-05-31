@@ -87,3 +87,21 @@
   - `npm.cmd run build`: passed。
   - `npx.cmd --yes --package @playwright/cli playwright-cli snapshot`: 本地预览页尺寸下拉默认选中“自动”，并展示全部 10 个尺寸选项；已验证可选择 `3840x2160`。
   - `npm.cmd run test:e2e`: 16 tests passed。
+
+## 2026-06-01 UI 视觉现代化优化
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `frontend-design` skill 对现有 Vue/Tailwind 工作台做纯视觉优化；保持技术栈、组件层级、页面信息架构、业务逻辑、接口、状态管理和数据结构不变。
+- 修改内容:
+  - `src/style.css`: 新增浅色工业摄影工作台视觉系统，包含暖白网格背景、细腻径向光、卡片表面、顶部栏、主按钮、表单控件、焦点态、滚动条和通用交互过渡。
+  - `src/pages/Workbench.vue`: 保持三栏布局结构不变，替换页面背景、顶部栏、卡片容器和生成按钮视觉样式。
+  - `src/components/GenerationForm.vue`: 优化参数表单的层级、间距、输入框、选择器、数量步进器和重置按钮质感。
+  - `src/components/ApiKeyInput.vue`: 优化密钥输入区、连接测试按钮、连接状态、记住密钥提示和交互状态。
+  - `src/components/ReferenceImages.vue`、`src/components/MaskImageInput.vue`: 优化上传区域、URL 输入、预览项、警告/错误状态和按钮样式。
+  - `src/components/ResultGrid.vue`、`src/components/HistoryPanel.vue`: 优化空状态、加载态、结果卡片、历史搜索、历史记录项、弹窗和操作按钮视觉表现。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - Playwright CLI 桌面检查 `1280x800`: document/body horizontal overflow 均为 0，主要区域无重叠。
+  - Playwright CLI 移动检查 `375x812`: document/body horizontal overflow 均为 0，核心区域纵向堆叠正常，生成按钮宽度 351px，无文字溢出。
