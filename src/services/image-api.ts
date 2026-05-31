@@ -189,10 +189,56 @@ export function validateImageUrl(url: string): AppError | null {
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
       return createValidationError('图片 URL 必须使用 http 或 https 协议')
     }
+    if (parsed.username || parsed.password) {
+      return createValidationError('图片 URL 不能包含用户名或密码')
+    }
+    if (isBlockedUrlHost(parsed.hostname)) {
+      return createValidationError('图片 URL 必须指向公网主机')
+    }
     return null
   } catch {
     return createValidationError('图片 URL 格式无效')
   }
+}
+
+function isBlockedUrlHost(hostname: string): boolean {
+  const host = hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
+  if (
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host === 'metadata.google.internal'
+  ) {
+    return true
+  }
+
+  const ipv4 = parseIpv4(host)
+  if (ipv4) {
+    const [a, b] = ipv4
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168)
+    )
+  }
+
+  if (!host.includes(':')) return false
+  if (host === '::1' || host === '0:0:0:0:0:0:0:1') return true
+  if (host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:')) return true
+  return false
+}
+
+function parseIpv4(host: string): number[] | null {
+  const parts = host.split('.')
+  if (parts.length !== 4) return null
+  const nums = parts.map((part) => {
+    if (!/^\d{1,3}$/.test(part)) return Number.NaN
+    const value = Number(part)
+    return value >= 0 && value <= 255 ? value : Number.NaN
+  })
+  return nums.every(Number.isFinite) ? nums : null
 }
 
 export function buildEditsJsonBody(params: EditsJsonParams): Record<string, unknown> {

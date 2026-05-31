@@ -209,6 +209,13 @@ test.describe('E2E: API Key 安全', () => {
   test('API Key 只发送到配置的 Sub2API 后端', async ({ page }) => {
     await page.goto('/')
     const interceptedUrls: string[] = []
+    const authorizedUrls: string[] = []
+    page.on('request', (request) => {
+      const authorization = request.headers().authorization
+      if (authorization) {
+        authorizedUrls.push(request.url())
+      }
+    })
     await page.route('**/v1/images/**', async (route) => {
       interceptedUrls.push(route.request().url())
       await route.fulfill({
@@ -217,12 +224,19 @@ test.describe('E2E: API Key 安全', () => {
         body: JSON.stringify({ data: [{ b64_json: MOCK_B64_PNG }] }),
       })
     })
+    await setupMockModelsApi(page)
     await page.getByTestId('api-key-input').fill(TEST_API_KEY)
+    await page.getByTestId('test-connection-btn').click()
+    await expect(page.getByTestId('connection-ok')).toBeVisible({ timeout: 5000 })
     await page.getByTestId('prompt-input').fill('test')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('result-images')).toBeVisible({ timeout: 10000 })
     expect(interceptedUrls.length).toBeGreaterThan(0)
     for (const url of interceptedUrls) {
+      expect(new URL(url).origin).toBe(EXPECTED_SUB2API_ORIGIN)
+    }
+    expect(authorizedUrls.length).toBeGreaterThanOrEqual(2)
+    for (const url of authorizedUrls) {
       expect(new URL(url).origin).toBe(EXPECTED_SUB2API_ORIGIN)
     }
   })

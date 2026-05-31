@@ -219,6 +219,32 @@ describe('Generation Store - generate (Step 22)', () => {
       const serialized = JSON.stringify(record)
       expect(serialized).not.toContain('sk-test-key-1234567890')
     })
+
+    it('redacts current API Key from prompt and revised prompt before storing results or history', async () => {
+      const apiKey = 'sk-live-secret-1234567890'
+      const mockFetch = createMockFetch({
+        created: 1234567890,
+        data: [
+          {
+            b64_json: MOCK_API_RESPONSE.data[0].b64_json,
+            revised_prompt: `revised prompt containing ${apiKey}`,
+          },
+        ],
+      })
+      apiKeyStore.setApiKey(apiKey)
+      paramsStore.prompt = `prompt containing ${apiKey}`
+
+      await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(generationStore.currentResults[0].revisedPrompt).toContain('***REDACTED***')
+      expect(generationStore.currentResults[0].revisedPrompt).not.toContain(apiKey)
+
+      const db = getDatabase()
+      const record = await db.history.toCollection().first()
+      expect(record!.prompt).toBe('prompt containing ***REDACTED***')
+      expect(record!.revisedPrompt).toBe('revised prompt containing ***REDACTED***')
+      expect(JSON.stringify(record)).not.toContain(apiKey)
+    })
   })
 
   describe('request mode selection - local images (edits-multipart)', () => {

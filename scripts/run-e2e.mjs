@@ -5,12 +5,16 @@ import { setTimeout as delay } from 'node:timers/promises'
 const rootDir = fileURLToPath(new URL('../', import.meta.url))
 const viteBin = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url))
 const playwrightCli = fileURLToPath(new URL('../node_modules/@playwright/test/cli.js', import.meta.url))
-const serverUrl = 'http://127.0.0.1:5173'
+const defaultServerUrl = 'http://127.0.0.1:5173'
+const serverUrl = process.env.PLAYWRIGHT_BASE_URL ?? defaultServerUrl
+const shouldStartLocalServer = serverUrl === defaultServerUrl
 
-const server = spawn(process.execPath, [viteBin, '--host', '127.0.0.1'], {
-  cwd: rootDir,
-  stdio: 'ignore',
-})
+const server = shouldStartLocalServer
+  ? spawn(process.execPath, [viteBin, '--host', '127.0.0.1'], {
+      cwd: rootDir,
+      stdio: 'ignore',
+    })
+  : null
 
 async function waitForServer() {
   const startedAt = Date.now()
@@ -27,7 +31,7 @@ async function waitForServer() {
 }
 
 function stopServer() {
-  if (!server.killed) {
+  if (server && !server.killed) {
     server.kill()
   }
 }

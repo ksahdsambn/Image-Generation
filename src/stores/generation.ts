@@ -161,21 +161,26 @@ export const useGenerationStore = defineStore('generation', () => {
       }
 
       const parsedResults = parseApiResponse(apiResponse, paramsStore.outputFormat)
-      if (parsedResults.length === 0) {
+      const safePrompt = sanitizeText(trimmedPrompt, [apiKey])
+      const safeResults = parsedResults.map((result) => ({
+        ...result,
+        revisedPrompt: result.revisedPrompt ? sanitizeText(result.revisedPrompt, [apiKey]) : result.revisedPrompt,
+      }))
+      if (safeResults.length === 0) {
         error.value = createValidationError('生成结果为空，请重试')
         return false
       }
 
       _releaseResults(currentResults.value)
-      currentResults.value = parsedResults
+      currentResults.value = safeResults
 
       const writeResult = await writeMultipleHistory(
-        parsedResults.map((r) => ({
+        safeResults.map((r) => ({
           imageBlob: r.blob,
           revisedPrompt: r.revisedPrompt ?? null,
         })),
         {
-          prompt: trimmedPrompt,
+          prompt: safePrompt,
           model: 'gpt-image-2',
           size: paramsStore.size,
           quality: paramsStore.quality,
@@ -188,7 +193,7 @@ export const useGenerationStore = defineStore('generation', () => {
       )
 
       if (writeResult.failureCount > 0 && writeResult.errors.length > 0) {
-        if (writeResult.failureCount === parsedResults.length) {
+        if (writeResult.failureCount === safeResults.length) {
           storageWarning.value = {
             code: 'STORAGE_ERROR',
             userMessage: '图片已生成，但保存到本地历史失败，请立即下载。可尝试清空历史记录后重新生成。',

@@ -551,6 +551,10 @@ describe('validateImageUrl', () => {
     expect(validateImageUrl('http://example.com/img.png')).toBeNull()
   })
 
+  it('does not treat public hostnames with private-range prefixes as IP literals', () => {
+    expect(validateImageUrl('https://fc-example.com/img.png')).toBeNull()
+  })
+
   it('rejects ftp URLs', () => {
     const err = validateImageUrl('ftp://example.com/img.png')
     expect(err).not.toBeNull()
@@ -559,6 +563,28 @@ describe('validateImageUrl', () => {
 
   it('rejects data URLs', () => {
     const err = validateImageUrl('data:image/png;base64,abc')
+    expect(err).not.toBeNull()
+    expect(err!.code).toBe('VALIDATION_ERROR')
+  })
+
+  it.each([
+    'http://localhost/image.png',
+    'http://127.0.0.1/image.png',
+    'http://192.168.1.10/image.png',
+    'http://10.0.0.1/image.png',
+    'http://172.16.0.1/image.png',
+    'http://169.254.169.254/latest/meta-data',
+    'http://[::1]/image.png',
+    'http://[fc00::1]/image.png',
+    'http://metadata.google.internal/computeMetadata/v1/',
+  ])('rejects non-public URL host %s', (url) => {
+    const err = validateImageUrl(url)
+    expect(err).not.toBeNull()
+    expect(err!.code).toBe('VALIDATION_ERROR')
+  })
+
+  it('rejects URLs with credentials', () => {
+    const err = validateImageUrl('http://user:pass@example.com/image.png')
     expect(err).not.toBeNull()
     expect(err!.code).toBe('VALIDATION_ERROR')
   })

@@ -1,6 +1,9 @@
 import { defineConfig } from '@playwright/test'
 
 const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1'
+const defaultBaseUrl = 'http://127.0.0.1:5173'
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? defaultBaseUrl
+const useExternalBaseUrl = baseURL !== defaultBaseUrl
 
 export default defineConfig({
   testDir: './e2e',
@@ -13,9 +16,9 @@ export default defineConfig({
     ['html', { open: 'never' }],
   ],
   use: {
-    baseURL: 'http://127.0.0.1:5173',
+    baseURL,
     trace: 'on-first-retry',
-    screenshot: 'on',
+    screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
@@ -24,11 +27,11 @@ export default defineConfig({
       use: { browserName: 'chromium' },
     },
   ],
-  webServer: skipWebServer
+  webServer: skipWebServer || useExternalBaseUrl
     ? undefined
     : {
         command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1',
-        url: 'http://127.0.0.1:5173',
+        url: defaultBaseUrl,
         reuseExistingServer: !process.env.CI,
         timeout: 30000,
       },
