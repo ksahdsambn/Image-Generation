@@ -1,5 +1,20 @@
 # 修复记录
 
+## 2026-06-01 UI 交互动效增强
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `animate` skill，并按其要求参考 `frontend-design` 原则，为当前 Vue/Tailwind 前端增加克制、实用的交互动效；未修改生成流程、API 请求、历史写入、上传、密钥管理、store、service、types、数据结构或核心交互路径。
+- 修改内容:
+  - `src/style.css`: 新增统一 motion token、自然缓动曲线、卡片/结果/历史/状态块的轻量进入反馈、按钮 hover/active/focus 过渡、输入框 focus 反馈、上传区域 hover 扫光、结果和历史项 hover/selected 质感、连接/错误/警告状态出现反馈、图片预览弹窗出现反馈，并补强 `prefers-reduced-motion` 降级。
+  - `src/pages/Workbench.vue`: 仅为生成中按钮增加展示态 class 和加载态光标/颜色 class，保持点击、禁用和生成逻辑不变。
+  - `src/components/HistoryPanel.vue`: 仅为当前选中历史项增加 `is-selected` 展示 class，保持历史选择、重载、下载、删除和预览逻辑不变。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - 内置浏览器检查 `http://127.0.0.1:5173`: 当前系统 `prefers-reduced-motion: reduce` 下动画降级生效，document/body horizontal overflow 均为 0。
+  - Playwright `reducedMotion: no-preference` 检查: 生成按钮 hover、上传区域 hover、Prompt focus 均存在低成本 transform/shadow/transition 反馈，document/body horizontal overflow 均为 0。
+
 ## 2026-06-01 多端响应式适配增强
 
 - 操作模型ID: GPT-5 Codex

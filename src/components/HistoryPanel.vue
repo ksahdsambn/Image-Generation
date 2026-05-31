@@ -263,7 +263,10 @@ onBeforeUnmount(() => {
           :key="record.id"
           class="flex min-w-0 gap-2 p-2 rounded-lg border border-stone-200 bg-[#fffdfa]/80 hover:border-teal-700/35 hover:bg-white cursor-pointer shadow-sm"
           @click="selectedRecord = record"
-          :class="{ 'border-teal-700/50 bg-teal-50/70 shadow-[0_10px_24px_rgb(18_126_115_/_0.12)]': selectedRecord?.id === record.id }"
+          :class="{
+            'border-teal-700/50 bg-teal-50/70 shadow-[0_10px_24px_rgb(18_126_115_/_0.12)]': selectedRecord?.id === record.id,
+            'is-selected': selectedRecord?.id === record.id,
+          }"
           data-testid="history-item"
         >
           <div

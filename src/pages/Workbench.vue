@@ -58,7 +58,14 @@ async function handleGenerate() {
             @click="handleGenerate()"
             :disabled="!canGenerate"
             class="studio-primary-button w-full min-h-11 py-2.5 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
-            :class="canGenerate ? 'bg-[#d95c35] hover:bg-[#c84f2d]' : 'bg-stone-300 text-stone-500 cursor-not-allowed border-stone-300'"
+            :class="[
+              generationStore.isGenerating
+                ? 'bg-[#d95c35] text-white cursor-progress border-[#d95c35]'
+                : canGenerate
+                  ? 'bg-[#d95c35] hover:bg-[#c84f2d]'
+                  : 'bg-stone-300 text-stone-500 cursor-not-allowed border-stone-300',
+              generationStore.isGenerating ? 'is-generating' : '',
+            ]"
             data-testid="generate-btn"
             :aria-label="generationStore.isGenerating ? '正在生成' : '生成图片'"
           >

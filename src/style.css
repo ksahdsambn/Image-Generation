@@ -12,6 +12,11 @@
     --studio-coral: #d95c35;
     --studio-shadow-sm: 0 1px 0 rgb(255 255 255 / 0.86) inset, 0 8px 22px rgb(54 44 32 / 0.08);
     --studio-shadow-md: 0 1px 0 rgb(255 255 255 / 0.82) inset, 0 18px 42px rgb(54 44 32 / 0.10);
+    --studio-motion-fast: 120ms;
+    --studio-motion-base: 180ms;
+    --studio-motion-slow: 280ms;
+    --studio-ease-out: cubic-bezier(0.25, 1, 0.5, 1);
+    --studio-ease-out-strong: cubic-bezier(0.22, 1, 0.36, 1);
     font-family:
       "Aptos",
       "Segoe UI Variable",
@@ -70,6 +75,54 @@
 }
 
 @layer components {
+  @keyframes studio-fade-rise {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes studio-soft-scale {
+    from {
+      opacity: 0;
+      transform: scale(0.985);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes studio-button-wait {
+    0%,
+    100% {
+      opacity: 0.92;
+      transform: translateY(0);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+  }
+
+  @keyframes studio-spinner-breathe {
+    0%,
+    100% {
+      opacity: 0.82;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+
   .studio-shell {
     position: relative;
     isolation: isolate;
@@ -100,6 +153,10 @@
       0 1px 0 rgb(255 255 255 / 0.74) inset,
       0 18px 52px rgb(46 38 28 / 0.08);
     backdrop-filter: blur(18px) saturate(1.12);
+    transition:
+      background-color var(--studio-motion-slow) var(--studio-ease-out),
+      box-shadow var(--studio-motion-slow) var(--studio-ease-out),
+      border-color var(--studio-motion-slow) var(--studio-ease-out);
   }
 
   .studio-title {
@@ -116,6 +173,11 @@
     border: 1px solid var(--studio-line);
     border-radius: 8px;
     box-shadow: var(--studio-shadow-md);
+    animation: studio-fade-rise 320ms var(--studio-ease-out-strong) both;
+    transition:
+      border-color var(--studio-motion-base) var(--studio-ease-out),
+      box-shadow var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-base) var(--studio-ease-out);
   }
 
   .studio-card::before {
@@ -127,6 +189,7 @@
       linear-gradient(90deg, rgb(224 93 55 / 0.2), transparent 28%),
       linear-gradient(180deg, rgb(255 255 255 / 0.66), transparent 9rem);
     opacity: 0.56;
+    transition: opacity var(--studio-motion-slow) var(--studio-ease-out);
   }
 
   .studio-card > * {
@@ -146,6 +209,8 @@
   }
 
   .studio-primary-button {
+    position: relative;
+    overflow: hidden;
     min-height: 44px;
     border: 1px solid rgb(43 34 26 / 0.18);
     background-image: linear-gradient(180deg, rgb(229 103 63), var(--studio-coral));
@@ -161,10 +226,29 @@
       0 1px 0 rgb(255 255 255 / 0.28) inset;
   }
 
+  .studio-primary-button.is-generating {
+    cursor: progress;
+    background-image: linear-gradient(180deg, rgb(220 100 62), rgb(189 76 43));
+    box-shadow:
+      0 16px 34px rgb(225 96 58 / 0.24),
+      0 0 0 4px rgb(225 96 58 / 0.08),
+      0 1px 0 rgb(255 255 255 / 0.24) inset;
+    animation: studio-button-wait 900ms var(--studio-ease-out) infinite;
+  }
+
   .studio-primary-button:disabled {
     background: linear-gradient(180deg, #ddd8cf, #d1cbc1);
     color: #746a60;
     box-shadow: none;
+  }
+
+  .studio-primary-button:disabled.is-generating {
+    color: #fffdfa;
+    background-image: linear-gradient(180deg, rgb(220 100 62), rgb(189 76 43));
+    box-shadow:
+      0 16px 34px rgb(225 96 58 / 0.24),
+      0 0 0 4px rgb(225 96 58 / 0.08),
+      0 1px 0 rgb(255 255 255 / 0.24) inset;
   }
 
   .generation-form label,
@@ -188,10 +272,10 @@
     border-color: rgb(63 54 43 / 0.2);
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset;
     transition:
-      border-color 160ms ease,
-      box-shadow 160ms ease,
-      background-color 160ms ease,
-      transform 160ms ease;
+      border-color var(--studio-motion-base) var(--studio-ease-out),
+      box-shadow var(--studio-motion-base) var(--studio-ease-out),
+      background-color var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-base) var(--studio-ease-out);
   }
 
   .generation-form textarea:focus,
@@ -206,6 +290,7 @@
     box-shadow:
       0 0 0 3px rgb(18 126 115 / 0.13),
       0 1px 0 rgb(255 255 255 / 0.9) inset;
+    transform: translateY(-1px);
   }
 
   .generation-form textarea::placeholder,
@@ -223,12 +308,24 @@
   .result-grid button,
   .history-panel button {
     transition:
-      color 150ms ease,
-      background-color 150ms ease,
-      border-color 150ms ease,
-      box-shadow 150ms ease,
-      transform 150ms ease,
-      opacity 150ms ease;
+      color var(--studio-motion-fast) var(--studio-ease-out),
+      background-color var(--studio-motion-fast) var(--studio-ease-out),
+      border-color var(--studio-motion-fast) var(--studio-ease-out),
+      box-shadow var(--studio-motion-fast) var(--studio-ease-out),
+      transform var(--studio-motion-fast) var(--studio-ease-out),
+      opacity var(--studio-motion-fast) var(--studio-ease-out);
+  }
+
+  .generation-form button svg,
+  .api-key-area button svg,
+  .reference-images button svg,
+  .mask-image-input button svg,
+  .result-grid button svg,
+  .history-panel button svg {
+    transition:
+      color var(--studio-motion-fast) var(--studio-ease-out),
+      opacity var(--studio-motion-fast) var(--studio-ease-out),
+      transform var(--studio-motion-fast) var(--studio-ease-out);
   }
 
   .generation-form button:not(:disabled):hover,
@@ -241,11 +338,26 @@
   }
 
   .reference-images [data-testid="upload-btn"] {
+    position: relative;
+    overflow: hidden;
     background:
       linear-gradient(135deg, rgb(255 253 248 / 0.75), rgb(238 245 242 / 0.84)),
       repeating-linear-gradient(-45deg, transparent 0 10px, rgb(18 126 115 / 0.045) 10px 20px);
     border-color: rgb(18 126 115 / 0.3);
     color: #4b4137;
+  }
+
+  .reference-images [data-testid="upload-btn"]::after {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(100deg, transparent 18%, rgb(255 255 255 / 0.55) 50%, transparent 82%);
+    opacity: 0;
+    transform: translateX(-100%);
+    transition:
+      opacity var(--studio-motion-base) var(--studio-ease-out),
+      transform 420ms var(--studio-ease-out-strong);
   }
 
   .reference-images [data-testid="upload-btn"]:not(:disabled):hover {
@@ -254,11 +366,17 @@
     box-shadow: 0 12px 28px rgb(18 126 115 / 0.12);
   }
 
+  .reference-images [data-testid="upload-btn"]:not(:disabled):hover::after {
+    opacity: 0.48;
+    transform: translateX(100%);
+  }
+
   .result-grid [data-testid="empty-state"],
   .result-grid [data-testid="loading-state"],
   .history-panel [data-testid="history-empty"],
   .history-panel [data-testid="history-loading"] {
     color: #796c5f;
+    animation: studio-fade-rise 260ms var(--studio-ease-out-strong) both;
   }
 
   .history-panel [data-testid="history-list"] {
@@ -382,16 +500,28 @@
     align-items: center;
     justify-content: center;
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.76) inset;
+    transition:
+      background-color var(--studio-motion-base) var(--studio-ease-out),
+      box-shadow var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-base) var(--studio-ease-out);
   }
 
   .reference-images [data-testid="local-image-previews"] > div,
   .history-panel [data-testid="history-item"],
   .result-grid [data-testid="result-images"] > div {
     transition:
-      border-color 160ms ease,
-      box-shadow 160ms ease,
-      background-color 160ms ease,
-      transform 160ms ease;
+      border-color var(--studio-motion-base) var(--studio-ease-out),
+      box-shadow var(--studio-motion-base) var(--studio-ease-out),
+      background-color var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-base) var(--studio-ease-out);
+  }
+
+  .reference-images [data-testid="local-image-previews"] img,
+  .history-panel [data-testid="history-item"] img,
+  .result-grid [data-testid="result-images"] img {
+    transition:
+      opacity var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-slow) var(--studio-ease-out);
   }
 
   .history-panel [data-testid="history-item"]:hover,
@@ -399,12 +529,24 @@
     box-shadow: 0 16px 34px rgb(54 44 32 / 0.12);
   }
 
+  .history-panel [data-testid="history-item"].is-selected {
+    transform: translateY(-1px);
+  }
+
   .result-grid [data-testid="empty-state"],
   .result-grid [data-testid="loading-state"] {
+    position: relative;
     border-radius: 7px;
     background:
       radial-gradient(circle at 50% 52%, rgb(18 126 115 / 0.055), transparent 11rem),
       linear-gradient(180deg, rgb(255 253 248 / 0.58), transparent);
+  }
+
+  .result-grid [data-testid="loading-state"] > div,
+  .history-panel [data-testid="history-loading"] > div {
+    animation:
+      spin 1s linear infinite,
+      studio-spinner-breathe 1200ms var(--studio-ease-out) infinite;
   }
 
   .history-panel [data-testid="history-empty"],
@@ -416,6 +558,120 @@
   .reference-images [data-testid="web-url-list"] > div,
   .mask-image-input [data-testid="mask-preview"] {
     box-shadow: 0 1px 0 rgb(255 255 255 / 0.78) inset;
+    animation: studio-soft-scale 180ms var(--studio-ease-out) both;
+    transition:
+      border-color var(--studio-motion-base) var(--studio-ease-out),
+      background-color var(--studio-motion-base) var(--studio-ease-out),
+      box-shadow var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-base) var(--studio-ease-out);
+  }
+
+  .result-grid [data-testid="error-state"],
+  .result-grid [data-testid="storage-warning"],
+  .api-key-area [data-testid="connection-ok"],
+  .api-key-area [data-testid="connection-error"],
+  .reference-images [data-testid="mix-conflict-warning"],
+  .reference-images [data-testid="validation-error"],
+  .mask-image-input [data-testid="mask-validation-error"],
+  .api-key-area [data-testid="remember-risk-hint"] {
+    animation: studio-fade-rise 220ms var(--studio-ease-out-strong) both;
+  }
+
+  .result-grid [data-testid="result-images"] > div {
+    animation: studio-soft-scale 240ms var(--studio-ease-out-strong) both;
+  }
+
+  .result-grid [data-testid="result-images"] > div:nth-child(2) {
+    animation-delay: 40ms;
+  }
+
+  .result-grid [data-testid="result-images"] > div:nth-child(3) {
+    animation-delay: 80ms;
+  }
+
+  .result-grid [data-testid="result-images"] > div:nth-child(4) {
+    animation-delay: 120ms;
+  }
+
+  .history-panel [data-testid="history-item"] {
+    animation: studio-fade-rise 180ms var(--studio-ease-out) both;
+  }
+
+  .history-panel [data-testid="history-item"]:focus-within {
+    border-color: rgb(18 126 115 / 0.46);
+    box-shadow:
+      0 0 0 3px rgb(18 126 115 / 0.1),
+      0 12px 28px rgb(54 44 32 / 0.10);
+  }
+
+  .history-panel [data-testid="history-item"].is-selected {
+    border-color: rgb(18 126 115 / 0.56);
+    box-shadow:
+      0 0 0 1px rgb(18 126 115 / 0.08) inset,
+      0 14px 30px rgb(18 126 115 / 0.14);
+  }
+
+  .history-panel [data-testid="history-list"] > [data-testid="history-item"]:nth-child(2) {
+    animation-delay: 25ms;
+  }
+
+  .history-panel [data-testid="history-list"] > [data-testid="history-item"]:nth-child(3) {
+    animation-delay: 50ms;
+  }
+
+  .history-panel [data-testid="history-list"] > [data-testid="history-item"]:nth-child(4) {
+    animation-delay: 75ms;
+  }
+
+  [data-testid="image-modal"] {
+    animation: studio-soft-scale 180ms var(--studio-ease-out) both;
+  }
+
+  [data-testid="image-modal"] > div {
+    animation: studio-fade-rise 220ms var(--studio-ease-out-strong) both;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .studio-card:hover {
+      border-color: rgb(63 54 43 / 0.22);
+      box-shadow:
+        0 1px 0 rgb(255 255 255 / 0.82) inset,
+        0 22px 48px rgb(54 44 32 / 0.13);
+      transform: translateY(-1px);
+    }
+
+    .studio-card:hover::before {
+      opacity: 0.7;
+    }
+
+    .generation-form button:not(:disabled):hover svg,
+    .api-key-area button:not(:disabled):hover svg,
+    .reference-images button:not(:disabled):hover svg,
+    .mask-image-input button:not(:disabled):hover svg,
+    .result-grid button:not(:disabled):hover svg,
+    .history-panel button:not(:disabled):hover svg {
+      transform: translateY(-1px);
+    }
+
+    .reference-images [data-testid="local-image-previews"] > div:hover,
+    .history-panel [data-testid="history-item"]:hover,
+    .result-grid [data-testid="result-images"] > div:hover {
+      transform: translateY(-2px);
+    }
+
+    .reference-images [data-testid="local-image-previews"] > div:hover img,
+    .history-panel [data-testid="history-item"]:hover img,
+    .result-grid [data-testid="result-images"] > div:hover img {
+      transform: scale(1.025);
+    }
+
+    .reference-images [data-testid="web-url-list"] > div:hover,
+    .mask-image-input [data-testid="mask-preview"]:hover {
+      background-color: rgb(255 253 248 / 0.96);
+      border-color: rgb(18 126 115 / 0.26);
+      box-shadow: 0 8px 20px rgb(54 44 32 / 0.08);
+      transform: translateY(-1px);
+    }
   }
 
   @media (max-width: 1023px) {
@@ -448,6 +704,17 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .studio-card,
+    .studio-primary-button.is-generating,
     .generation-form button,
     .api-key-area button,
     .reference-images button,
@@ -462,8 +729,11 @@
     .mask-image-input input,
     .history-panel input,
     .history-panel [data-testid="history-item"],
-    .result-grid [data-testid="result-images"] > div {
-      transition: none;
+    .result-grid [data-testid="result-images"] > div,
+    .reference-images [data-testid="local-image-previews"] img,
+    .history-panel [data-testid="history-item"] img,
+    .result-grid [data-testid="result-images"] img {
+      transform: none !important;
     }
   }
 }
