@@ -42,7 +42,7 @@ src/
 │   │   └── storage-availability.test.ts  # 存储可用性检测单元测试 (3 项)
 │   └── components/         # Vue 组件测试
 │       ├── Workbench.test.ts       # 主工作台布局测试 (12 项)
-│       ├── ApiKeyInput.test.ts     # API Key 配置 UI 测试 (12 项)
+│       ├── ApiKeyInput.test.ts     # API Key 配置 UI 和连接状态测试 (18 项)
 │       ├── GenerationForm.test.ts  # 生成参数表单测试 (18 项)
 │       ├── ReferenceImages.test.ts # 参考图和遮罩图测试 (19 项)
 │       ├── ResultGrid.test.ts      # 结果展示测试 (10 项)
@@ -86,6 +86,14 @@ src/
 └── style.css        # 全局样式 (TailwindCSS 入口)
 ```
 
+根目录补充:
+
+- `scripts/`: 本地开发和测试辅助脚本目录，目前包含 E2E 启动器。
+- `public/`: 构建时原样复制的公共静态资源目录。
+- `e2e/`: Playwright 浏览器端测试目录。
+- `doc/`: 需求、计划、清单、架构和进度文档目录。
+- `test-results/`: Playwright 运行生成的测试截图结果目录。
+
 ## 关键文件说明
 
 | 文件 | 作用 |
@@ -96,9 +104,15 @@ src/
 | `tsconfig.json` | TypeScript 项目引用根配置 |
 | `tsconfig.app.json` | 应用 TypeScript 配置，包含路径别名 `@/` |
 | `tsconfig.node.json` | Node 端 TypeScript 配置 (Vite/构建工具) |
-| `package.json` | 项目依赖和脚本定义 |
+| `package.json` | 项目依赖和脚本定义；`test:e2e` 通过 `scripts/run-e2e.mjs` 运行 Playwright |
+| `package-lock.json` | npm 锁文件，固定依赖解析版本 |
+| `README.md` | 项目说明文档，记录运行、构建和项目背景 |
+| `.gitignore` | Git 忽略规则，排除依赖、构建产物、日志和编辑器临时文件 |
 | `.env` | 环境变量 (VITE_SUB2API_BASE_URL, VITE_APP_TITLE 等) |
+| `.env.production` | 生产构建环境变量，固定 Sub2API Base URL、标题、历史容量限制和记住密钥开关，不包含 API Key |
 | `.env.example` | 环境变量示例文件 |
+| `public/favicon.svg` | 站点 favicon 静态资源，随生产构建复制到 `dist` |
+| `public/icons.svg` | 站点图标静态资源，随生产构建复制到 `dist` |
 | `src/main.ts` | Vue 应用挂载入口，注册 Pinia 状态管理 |
 | `src/App.vue` | 根组件，挂载 Workbench 主工作台页面 |
 | `src/style.css` | TailwindCSS v4 导入入口 |
@@ -115,7 +129,7 @@ src/
 | `src/services/response-parser.ts` | 响应解析模块：b64_json→Blob 转换、MIME 推断、revised_prompt 提取、对象 URL 创建与释放 |
 | `src/utils/image-utils.ts` | 图片转换工具：base64→Blob、MIME 类型推断、文件扩展名推断、对象 URL 管理、文件名生成 |
 | `src/pages/Workbench.vue` | 主工作台页面：三栏响应式布局 (表单/结果/历史)、生成按钮 (禁用/loading)、配置错误提示 |
-| `src/components/ApiKeyInput.vue` | API Key 配置组件：密钥输入、显示/隐藏切换、清除、记住密钥+风险提示 |
+| `src/components/ApiKeyInput.vue` | API Key 配置组件：密钥输入、显示/隐藏切换、清除、记住密钥+风险提示、连接测试按钮和连接状态 |
 | `src/components/GenerationForm.vue` | 生成参数表单：Prompt 多行输入、尺寸/数量/质量/背景/格式选择器、压缩条件输入、重置 |
 | `src/components/ReferenceImages.vue` | 参考图组件：本地上传+预览、网页URL添加删除、混用冲突警告、文件校验 |
 | `src/components/MaskImageInput.vue` | 遮罩图组件：文件上传/URL输入、预览、清除 |
@@ -144,7 +158,7 @@ src/
 | `src/__tests__/storage/storage-availability.test.ts` | 存储可用性检测单元测试：可用检测/缓存/降级消息 |
 | `src/__tests__/setup-indexeddb.ts` | 测试环境 IndexedDB polyfill (fake-indexeddb/auto) |
 | `src/__tests__/components/Workbench.test.ts` | 主工作台布局测试：四区域渲染/按钮禁用/loading/可访问性 (12 项) |
-| `src/__tests__/components/ApiKeyInput.test.ts` | API Key 配置 UI 测试：输入/显示隐藏/清除/记住/风险提示/不泄露 (12 项) |
+| `src/__tests__/components/ApiKeyInput.test.ts` | API Key 配置 UI 测试：输入/显示隐藏/清除/记住/风险提示/不泄露/连接测试状态 (18 项) |
 | `src/__tests__/components/GenerationForm.test.ts` | 生成参数表单测试：控件渲染/默认值/步进器/联动/压缩/重置 (18 项) |
 | `src/__tests__/components/ReferenceImages.test.ts` | 参考图和遮罩图测试：上传预览/移除/校验/URL/冲突/遮罩 (19 项) |
 | `src/__tests__/components/ResultGrid.test.ts` | 结果展示测试：四态/网格/下载/复制/移除/可访问性 (10 项) |
@@ -154,8 +168,9 @@ src/
 | `src/__tests__/stores/connection.test.ts` | 连接状态管理测试：idle/testing/connected/error四态/reset/错误清除 (6 项) |
 | `src/__tests__/security-protection.test.ts` | 敏感信息保护测试：历史记录安全/下载安全/错误脱敏/控制台无泄露/API Key隔离 (17 项) |
 | `src/__tests__/storage-degradation.test.ts` | 本地存储异常降级测试：存储不可用提示/写入失败保留结果/全部失败提示清空/容量清理/网络错误隔离 (8 项) |
-| `playwright.config.ts` | Playwright E2E 测试配置：chromium 浏览器、dev server 启动、截图和视频录制 |
-| `e2e/app.spec.ts` | 浏览器端端到端测试 (16 项)：主流程/连接检查/API Key 安全/桌面移动平板布局/CORS错误/大图预览 |
+| `playwright.config.ts` | Playwright E2E 测试配置：chromium 浏览器、127.0.0.1 baseURL、命令行/HTML 报告；支持 `PLAYWRIGHT_SKIP_WEBSERVER=1` 复用外部服务 |
+| `e2e/app.spec.ts` | 浏览器端端到端测试 (16 项)：主流程/连接检查/API Key 只发送到 `https://uxde.de`/桌面移动平板布局/CORS错误/大图预览 |
+| `scripts/run-e2e.mjs` | E2E 启动器：显式启动 Vite、本地服务可用后运行 Playwright、结束后关闭 Vite，避免 Windows 下内置 webServer 退出卡住 |
 
 ## 环境变量
 

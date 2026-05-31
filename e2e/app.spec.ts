@@ -1,6 +1,71 @@
 import { test, expect, type Page } from '@playwright/test'
+import fs from 'node:fs'
+import path from 'node:path'
 
 const MOCK_B64_PNG = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+const TEST_API_KEY = 'test-api-key-1234567890'
+const BAD_TEST_API_KEY = 'bad-test-api-key'
+const EXPECTED_SUB2API_ORIGIN = getExpectedSub2ApiOrigin()
+
+function getExpectedSub2ApiOrigin(): string {
+  const configuredBaseUrl = process.env.VITE_SUB2API_BASE_URL
+    ?? readEnvValue('VITE_SUB2API_BASE_URL', '.env.local')
+    ?? readEnvValue('VITE_SUB2API_BASE_URL', '.env')
+    ?? readEnvValue('VITE_SUB2API_BASE_URL', '.env.production')
+
+  if (!configuredBaseUrl) {
+    throw new Error('Missing VITE_SUB2API_BASE_URL for E2E origin assertion')
+  }
+
+  return new URL(configuredBaseUrl).origin
+}
+
+function readEnvValue(key: string, fileName: string): string | undefined {
+  const envPath = path.join(process.cwd(), fileName)
+  if (!fs.existsSync(envPath)) return undefined
+  const line = fs.readFileSync(envPath, 'utf8')
+    .split(/\r?\n/)
+    .find((entry) => entry.trim().startsWith(`${key}=`))
+  if (!line) return undefined
+  return line.slice(line.indexOf('=') + 1).trim().replace(/^['"]|['"]$/g, '')
+}
+
+async function expectNoHorizontalOverflow(page: Page) {
+  const metrics = await page.evaluate(() => ({
+    documentScrollWidth: document.documentElement.scrollWidth,
+    documentClientWidth: document.documentElement.clientWidth,
+    bodyScrollWidth: document.body.scrollWidth,
+    bodyClientWidth: document.body.clientWidth,
+  }))
+  expect(metrics.documentScrollWidth).toBeLessThanOrEqual(metrics.documentClientWidth + 1)
+  expect(metrics.bodyScrollWidth).toBeLessThanOrEqual(metrics.bodyClientWidth + 1)
+}
+
+async function expectTestIdsDoNotOverlap(page: Page, testIds: string[]) {
+  const overlaps = await page.evaluate((ids) => {
+    const boxes = ids.map((id) => {
+      const element = document.querySelector(`[data-testid="${id}"]`)
+      if (!element) return null
+      const rect = element.getBoundingClientRect()
+      return { id, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom }
+    }).filter((box): box is NonNullable<typeof box> => box !== null)
+
+    const result: string[] = []
+    for (let i = 0; i < boxes.length; i += 1) {
+      for (let j = i + 1; j < boxes.length; j += 1) {
+        const a = boxes[i]
+        const b = boxes[j]
+        const xOverlap = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left))
+        const yOverlap = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top))
+        if (xOverlap > 1 && yOverlap > 1) {
+          result.push(`${a.id}/${b.id}`)
+        }
+      }
+    }
+    return result
+  }, testIds)
+  expect(overlaps).toEqual([])
+}
 
 async function setupMockApi(page: Page, options?: {
   status?: number
@@ -41,7 +106,7 @@ test.describe('E2E: 主流程验证', () => {
 
   test('输入 API Key 后生成按钮仍需 Prompt', async ({ page }) => {
     await page.goto('/')
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     const generateBtn = page.getByTestId('generate-btn')
     await expect(generateBtn).toBeDisabled()
   })
@@ -49,7 +114,7 @@ test.describe('E2E: 主流程验证', () => {
   test('错误 API Key 显示认证错误', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page, { status: 401, body: { error: { message: 'Invalid API key', type: 'invalid_request_error', code: 'invalid_api_key' } } })
-    await page.getByTestId('api-key-input').fill('sk-wrong-key')
+    await page.getByTestId('api-key-input').fill(BAD_TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     const generateBtn = page.getByTestId('generate-btn')
     await expect(generateBtn).toBeEnabled()
@@ -61,7 +126,7 @@ test.describe('E2E: 主流程验证', () => {
   test('模拟成功文生图后图片可预览并进入历史', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     const generateBtn = page.getByTestId('generate-btn')
     await expect(generateBtn).toBeEnabled()
@@ -75,7 +140,7 @@ test.describe('E2E: 主流程验证', () => {
   test('失败请求不写历史', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page, { status: 500, body: { error: { message: 'Internal server error', type: 'server_error' } } })
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('error-state')).toBeVisible({ timeout: 5000 })
@@ -85,7 +150,7 @@ test.describe('E2E: 主流程验证', () => {
   test('刷新页面后 IndexedDB 历史仍可查看', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('history-item')).toBeVisible({ timeout: 10000 })
@@ -96,7 +161,7 @@ test.describe('E2E: 主流程验证', () => {
   test('删除历史记录生效', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('history-item')).toBeVisible({ timeout: 10000 })
@@ -110,7 +175,7 @@ test.describe('E2E: 主流程验证', () => {
   test('清空全部历史生效', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('a cute cat')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('history-item')).toBeVisible({ timeout: 10000 })
@@ -126,7 +191,7 @@ test.describe('E2E: 连接状态检查', () => {
   test('连接测试成功显示连接正常', async ({ page }) => {
     await page.goto('/')
     await setupMockModelsApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('test-connection-btn').click()
     await expect(page.getByTestId('connection-ok')).toBeVisible({ timeout: 5000 })
   })
@@ -134,7 +199,7 @@ test.describe('E2E: 连接状态检查', () => {
   test('连接测试失败显示错误', async ({ page }) => {
     await page.goto('/')
     await setupMockModelsApi(page, { status: 401 })
-    await page.getByTestId('api-key-input').fill('sk-wrong-key')
+    await page.getByTestId('api-key-input').fill(BAD_TEST_API_KEY)
     await page.getByTestId('test-connection-btn').click()
     await expect(page.getByTestId('connection-error')).toBeVisible({ timeout: 5000 })
   })
@@ -152,13 +217,13 @@ test.describe('E2E: API Key 安全', () => {
         body: JSON.stringify({ data: [{ b64_json: MOCK_B64_PNG }] }),
       })
     })
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('test')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('result-images')).toBeVisible({ timeout: 10000 })
     expect(interceptedUrls.length).toBeGreaterThan(0)
     for (const url of interceptedUrls) {
-      expect(url).toMatch(/your-sub2api\.example\.com/)
+      expect(new URL(url).origin).toBe(EXPECTED_SUB2API_ORIGIN)
     }
   })
 })
@@ -172,6 +237,8 @@ test.describe('E2E: 桌面端布局', () => {
     await expect(page.getByTestId('result-grid')).toBeVisible()
     await expect(page.getByTestId('history-panel')).toBeVisible()
     await expect(page.getByTestId('generate-btn')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+    await expectTestIdsDoNotOverlap(page, ['generation-form', 'result-grid', 'history-panel'])
   })
 })
 
@@ -182,10 +249,14 @@ test.describe('E2E: 移动端布局', () => {
     await setupMockApi(page)
     await expect(page.getByTestId('api-key-input')).toBeVisible()
     await expect(page.getByTestId('prompt-input')).toBeVisible()
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('mobile test')
-    await page.getByTestId('generate-btn').click()
+    const generateBtn = page.getByTestId('generate-btn')
+    await generateBtn.scrollIntoViewIfNeeded()
+    await expect(generateBtn).toBeInViewport()
+    await generateBtn.click()
     await expect(page.getByTestId('result-images')).toBeVisible({ timeout: 10000 })
+    await expectNoHorizontalOverflow(page)
   })
 })
 
@@ -197,6 +268,8 @@ test.describe('E2E: 平板布局', () => {
     await expect(page.getByTestId('generation-form')).toBeVisible()
     await expect(page.getByTestId('result-grid')).toBeVisible()
     await expect(page.getByTestId('history-panel')).toBeVisible()
+    await expectNoHorizontalOverflow(page)
+    await expectTestIdsDoNotOverlap(page, ['generation-form', 'result-grid', 'history-panel'])
   })
 })
 
@@ -206,7 +279,7 @@ test.describe('E2E: CORS 和网络错误', () => {
     await page.route('**/v1/images/**', async (route) => {
       await route.abort('failed')
     })
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('test')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('error-state')).toBeVisible({ timeout: 10000 })
@@ -219,7 +292,7 @@ test.describe('E2E: 模拟大图响应', () => {
   test('大图可预览', async ({ page }) => {
     await page.goto('/')
     await setupMockApi(page)
-    await page.getByTestId('api-key-input').fill('sk-test-key-1234567890')
+    await page.getByTestId('api-key-input').fill(TEST_API_KEY)
     await page.getByTestId('prompt-input').fill('large image test')
     await page.getByTestId('generate-btn').click()
     await expect(page.getByTestId('result-images')).toBeVisible({ timeout: 10000 })

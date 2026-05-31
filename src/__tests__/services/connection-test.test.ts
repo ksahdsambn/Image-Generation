@@ -47,6 +47,22 @@ describe('Connection Test Service (Step 23)', () => {
     expect(result.error).toBeNull()
   })
 
+  it('returns failure when 200 response body contains error', async () => {
+    const apiKey = 'sub2api-connect-key-123'
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: () => Promise.resolve(JSON.stringify({
+        error: { message: `Invalid key ${apiKey}`, code: 'invalid_api_key' },
+      })),
+    })
+
+    const result = await testConnection(apiKey, mockFetch)
+    expect(result.success).toBe(false)
+    expect(result.error!.code).toBe('AUTH_FAILED')
+    expect(result.error!.debugHint).not.toContain(apiKey)
+  })
+
   it('returns AUTH_FAILED on 401 response', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,

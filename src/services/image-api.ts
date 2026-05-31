@@ -64,16 +64,17 @@ export async function sendGenerationsRequest(
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '')
-      throw classifyHttpError(response.status, errorBody)
+      throw classifyHttpError(response.status, errorBody, [apiKey])
     }
 
-    return await response.json() as ApiResponse
+    const json = await readApiResponse(response, apiKey)
+    return json
   } catch (error: unknown) {
     if (isAppError(error)) throw error
     if (error instanceof TypeError || error instanceof Error) {
-      throw classifyNetworkError(error)
+      throw classifyNetworkError(error, [apiKey])
     }
-    throw classifyNetworkError(new Error(String(error)))
+    throw classifyNetworkError(new Error(String(error)), [apiKey])
   }
 }
 
@@ -156,16 +157,17 @@ export async function sendEditsMultipartRequest(
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '')
-      throw classifyHttpError(response.status, errorBody)
+      throw classifyHttpError(response.status, errorBody, [apiKey])
     }
 
-    return await response.json() as ApiResponse
+    const json = await readApiResponse(response, apiKey)
+    return json
   } catch (error: unknown) {
     if (isAppError(error)) throw error
     if (error instanceof TypeError || error instanceof Error) {
-      throw classifyNetworkError(error)
+      throw classifyNetworkError(error, [apiKey])
     }
-    throw classifyNetworkError(new Error(String(error)))
+    throw classifyNetworkError(new Error(String(error)), [apiKey])
   }
 }
 
@@ -249,16 +251,17 @@ export async function sendEditsJsonRequest(
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '')
-      throw classifyHttpError(response.status, errorBody)
+      throw classifyHttpError(response.status, errorBody, [apiKey])
     }
 
-    return await response.json() as ApiResponse
+    const json = await readApiResponse(response, apiKey)
+    return json
   } catch (error: unknown) {
     if (isAppError(error)) throw error
     if (error instanceof TypeError || error instanceof Error) {
-      throw classifyNetworkError(error)
+      throw classifyNetworkError(error, [apiKey])
     }
-    throw classifyNetworkError(new Error(String(error)))
+    throw classifyNetworkError(new Error(String(error)), [apiKey])
   }
 }
 
@@ -270,4 +273,12 @@ function isAppError(error: unknown): error is AppError {
     'userMessage' in error &&
     'debugHint' in error
   )
+}
+
+async function readApiResponse(response: Response, apiKey: string): Promise<ApiResponse> {
+  const json = await response.json() as ApiResponse & { error?: unknown }
+  if ('error' in json) {
+    throw classifyHttpError(response.status, JSON.stringify(json), [apiKey])
+  }
+  return json
 }

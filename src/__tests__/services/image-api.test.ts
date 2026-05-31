@@ -191,6 +191,25 @@ describe('sendGenerationsRequest', () => {
     expect(result.data[1].b64_json).toBe('img2')
   })
 
+  it('rejects HTTP 200 response when body contains error', async () => {
+    const apiKey = 'sub2api-key-with-hyphen-123'
+    const mockFetch = createMockFetch({
+      ok: true,
+      status: 200,
+      json: {
+        error: { message: `Invalid key ${apiKey}`, code: 'invalid_api_key' },
+        data: [{ b64_json: 'should-not-be-used' }],
+      },
+    })
+
+    await expect(
+      sendGenerationsRequest(apiKey, { prompt: 'a cat' }, mockFetch),
+    ).rejects.toMatchObject({
+      code: 'AUTH_FAILED',
+      debugHint: expect.not.stringContaining(apiKey),
+    })
+  })
+
   it('throws config error when base URL is missing', async () => {
     const { loadConfig } = await import('@/utils/config')
     vi.mocked(loadConfig).mockReturnValueOnce({
@@ -498,6 +517,29 @@ describe('sendEditsMultipartRequest', () => {
       ),
     ).rejects.toMatchObject({ code: 'AUTH_FAILED' })
   })
+
+  it('rejects HTTP 200 multipart edit response when body contains error', async () => {
+    const apiKey = 'sub2api-multipart-key-123'
+    const mockFetch = createMockFetch({
+      ok: true,
+      status: 200,
+      json: {
+        error: { message: `Invalid key ${apiKey}`, code: 'invalid_api_key' },
+        data: [{ b64_json: 'should-not-be-used' }],
+      },
+    })
+
+    await expect(
+      sendEditsMultipartRequest(
+        apiKey,
+        { prompt: 'edit', images: [createPngFile()] },
+        mockFetch,
+      ),
+    ).rejects.toMatchObject({
+      code: 'AUTH_FAILED',
+      debugHint: expect.not.stringContaining(apiKey),
+    })
+  })
 })
 
 describe('validateImageUrl', () => {
@@ -691,6 +733,29 @@ describe('sendEditsJsonRequest', () => {
         mockFetch,
       ),
     ).rejects.toMatchObject({ code: 'RATE_LIMITED' })
+  })
+
+  it('rejects HTTP 200 JSON edit response when body contains error', async () => {
+    const apiKey = 'sub2api-json-key-123'
+    const mockFetch = createMockFetch({
+      ok: true,
+      status: 200,
+      json: {
+        error: { message: `Invalid key ${apiKey}`, code: 'invalid_api_key' },
+        data: [{ b64_json: 'should-not-be-used' }],
+      },
+    })
+
+    await expect(
+      sendEditsJsonRequest(
+        apiKey,
+        { prompt: 'edit', imageUrls: ['https://example.com/img.png'] },
+        mockFetch,
+      ),
+    ).rejects.toMatchObject({
+      code: 'AUTH_FAILED',
+      debugHint: expect.not.stringContaining(apiKey),
+    })
   })
 
   it('handles network error', async () => {

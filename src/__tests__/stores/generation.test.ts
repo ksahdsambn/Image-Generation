@@ -96,7 +96,48 @@ describe('Generation Store - generate (Step 22)', () => {
       const result = await generationStore.generate(apiKeyStore, paramsStore)
       expect(result).toBe(false)
       expect(generationStore.error).toBeTruthy()
-      expect(generationStore.error!.userMessage).toContain('不能同时使用')
+      expect(generationStore.error!.code).toBe('VALIDATION_ERROR')
+    })
+
+    it('returns false when mask is provided without any reference image', async () => {
+      const mockFetch = createMockFetch(MOCK_API_RESPONSE)
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'test'
+      paramsStore.setMaskImage({ file: new File(['mask'], 'mask.png', { type: 'image/png' }), previewUrl: 'blob:mask' })
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(false)
+      expect(generationStore.error!.code).toBe('VALIDATION_ERROR')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('returns false when local reference image is paired with mask URL', async () => {
+      const mockFetch = createMockFetch(MOCK_API_RESPONSE)
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'test'
+      paramsStore.addLocalImage({ file: new File(['image'], 'image.png', { type: 'image/png' }), previewUrl: 'blob:image' })
+      paramsStore.setMaskImage({ url: 'https://example.com/mask.png' })
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(false)
+      expect(generationStore.error!.code).toBe('VALIDATION_ERROR')
+      expect(mockFetch).not.toHaveBeenCalled()
+    })
+
+    it('returns false when web reference image is paired with local mask file', async () => {
+      const mockFetch = createMockFetch(MOCK_API_RESPONSE)
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'test'
+      paramsStore.addWebImageUrl('https://example.com/image.png')
+      paramsStore.setMaskImage({ file: new File(['mask'], 'mask.png', { type: 'image/png' }), previewUrl: 'blob:mask' })
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(false)
+      expect(generationStore.error!.code).toBe('VALIDATION_ERROR')
+      expect(mockFetch).not.toHaveBeenCalled()
     })
   })
 

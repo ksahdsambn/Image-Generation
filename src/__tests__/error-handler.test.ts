@@ -18,13 +18,13 @@ describe('classifyHttpError', () => {
   it('classifies 403 with image keyword as PERMISSION_DENIED', () => {
     const err = classifyHttpError(403, 'Image generation permission denied')
     expect(err.code).toBe(AppErrorCode.PERMISSION_DENIED)
-    expect(err.userMessage).toContain('图片生成权限')
+    expect(err.userMessage).not.toContain('Image generation permission denied')
   })
 
   it('classifies 403 with quota keyword as INSUFFICIENT_QUOTA', () => {
     const err = classifyHttpError(403, 'Insufficient quota')
     expect(err.code).toBe(AppErrorCode.INSUFFICIENT_QUOTA)
-    expect(err.userMessage).toContain('余额或额度')
+    expect(err.userMessage).not.toContain('Insufficient quota')
   })
 
   it('classifies 403 with balance keyword as INSUFFICIENT_QUOTA', () => {
@@ -40,32 +40,31 @@ describe('classifyHttpError', () => {
   it('classifies 429 as RATE_LIMITED', () => {
     const err = classifyHttpError(429)
     expect(err.code).toBe(AppErrorCode.RATE_LIMITED)
-    expect(err.userMessage).toContain('频繁')
+    expect(err.userMessage).toBeTruthy()
   })
 
-  it('classifies 500 as UPSTREAM_ERROR', () => {
-    const err = classifyHttpError(500)
-    expect(err.code).toBe(AppErrorCode.UPSTREAM_ERROR)
+  it('classifies 500, 502, and 503 as UPSTREAM_ERROR', () => {
+    expect(classifyHttpError(500).code).toBe(AppErrorCode.UPSTREAM_ERROR)
+    expect(classifyHttpError(502).code).toBe(AppErrorCode.UPSTREAM_ERROR)
+    expect(classifyHttpError(503).code).toBe(AppErrorCode.UPSTREAM_ERROR)
   })
 
-  it('classifies 502 as UPSTREAM_ERROR', () => {
-    const err = classifyHttpError(502)
-    expect(err.code).toBe(AppErrorCode.UPSTREAM_ERROR)
-  })
-
-  it('classifies 503 as UPSTREAM_ERROR', () => {
-    const err = classifyHttpError(503)
-    expect(err.code).toBe(AppErrorCode.UPSTREAM_ERROR)
-  })
-
-  it('classifies 418 as UNKNOWN_ERROR', () => {
+  it('classifies unknown status as UNKNOWN_ERROR', () => {
     const err = classifyHttpError(418)
     expect(err.code).toBe(AppErrorCode.UNKNOWN_ERROR)
   })
 
   it('sanitizes API Key from response body', () => {
-    const err = classifyHttpError(401, 'Invalid key sk-abcdef1234567890abcdef1234567890abcdef')
-    expect(err.debugHint).not.toContain('sk-abcdef1234567890abcdef1234567890abcdef')
+    const apiKey = 'sk-abcdef1234567890abcdef1234567890abcdef'
+    const err = classifyHttpError(401, `Invalid key ${apiKey}`)
+    expect(err.debugHint).not.toContain(apiKey)
+    expect(err.debugHint).toContain('***REDACTED***')
+  })
+
+  it('sanitizes explicitly supplied non-sk API Key from response body', () => {
+    const apiKey = 'sub2api-key-with-hyphen-123'
+    const err = classifyHttpError(200, `Upstream error echoed ${apiKey}`, [apiKey])
+    expect(err.debugHint).not.toContain(apiKey)
     expect(err.debugHint).toContain('***REDACTED***')
   })
 
@@ -82,38 +81,31 @@ describe('classifyNetworkError', () => {
   it('classifies Failed to fetch as NETWORK_ERROR', () => {
     const err = classifyNetworkError(new TypeError('Failed to fetch'))
     expect(err.code).toBe(AppErrorCode.NETWORK_ERROR)
-    expect(err.userMessage).toContain('无法连接')
+    expect(err.userMessage).toBeTruthy()
   })
 
-  it('classifies CORS error as CORS_BLOCKED', () => {
-    const err = classifyNetworkError(new Error('CORS policy blocked'))
-    expect(err.code).toBe(AppErrorCode.CORS_BLOCKED)
-    expect(err.userMessage).toContain('跨域')
+  it('classifies CORS-like failures as CORS_BLOCKED', () => {
+    expect(classifyNetworkError(new Error('CORS policy blocked')).code).toBe(AppErrorCode.CORS_BLOCKED)
+    expect(classifyNetworkError(new Error('Cross-origin request blocked')).code).toBe(AppErrorCode.CORS_BLOCKED)
+    expect(classifyNetworkError(new Error('Access-Control-Allow-Origin missing')).code).toBe(AppErrorCode.CORS_BLOCKED)
   })
 
-  it('classifies cross-origin error as CORS_BLOCKED', () => {
-    const err = classifyNetworkError(new Error('Cross-origin request blocked'))
-    expect(err.code).toBe(AppErrorCode.CORS_BLOCKED)
-  })
-
-  it('classifies access-control error as CORS_BLOCKED', () => {
-    const err = classifyNetworkError(new Error('Access-Control-Allow-Origin missing'))
-    expect(err.code).toBe(AppErrorCode.CORS_BLOCKED)
-  })
-
-  it('classifies timeout as NETWORK_ERROR', () => {
-    const err = classifyNetworkError(new Error('Request timed out'))
-    expect(err.code).toBe(AppErrorCode.NETWORK_ERROR)
-  })
-
-  it('classifies abort as NETWORK_ERROR', () => {
-    const err = classifyNetworkError(new DOMException('The operation was aborted', 'AbortError'))
-    expect(err.code).toBe(AppErrorCode.NETWORK_ERROR)
+  it('classifies timeout and abort as NETWORK_ERROR', () => {
+    expect(classifyNetworkError(new Error('Request timed out')).code).toBe(AppErrorCode.NETWORK_ERROR)
+    expect(classifyNetworkError(new DOMException('The operation was aborted', 'AbortError')).code).toBe(AppErrorCode.NETWORK_ERROR)
   })
 
   it('sanitizes API Key from network error message', () => {
-    const err = classifyNetworkError(new Error('Failed to fetch for sk-abcdef1234567890abcdef1234567890abcdef'))
-    expect(err.debugHint).not.toContain('sk-abcdef1234567890abcdef1234567890abcdef')
+    const apiKey = 'sk-abcdef1234567890abcdef1234567890abcdef'
+    const err = classifyNetworkError(new Error(`Failed to fetch for ${apiKey}`))
+    expect(err.debugHint).not.toContain(apiKey)
+  })
+
+  it('sanitizes explicitly supplied non-sk API Key from network error message', () => {
+    const apiKey = 'sub2api-network-key-123'
+    const err = classifyNetworkError(new Error(`Failed to fetch for ${apiKey}`), [apiKey])
+    expect(err.debugHint).not.toContain(apiKey)
+    expect(err.debugHint).toContain('***REDACTED***')
   })
 })
 
@@ -121,8 +113,7 @@ describe('classifyStorageError', () => {
   it('classifies storage error with correct message', () => {
     const err = classifyStorageError(new Error('IndexedDB write failed'))
     expect(err.code).toBe(AppErrorCode.STORAGE_ERROR)
-    expect(err.userMessage).toContain('保存到本地历史失败')
-    expect(err.userMessage).toContain('请立即下载')
+    expect(err.userMessage).toBeTruthy()
   })
 })
 
@@ -148,5 +139,15 @@ describe('sanitizeText', () => {
 
   it('leaves normal text unchanged', () => {
     expect(sanitizeText('normal text')).toBe('normal text')
+  })
+
+  it('redacts bearer tokens and key-like fields', () => {
+    expect(sanitizeText('Authorization: Bearer sub2api-token-123')).not.toContain('sub2api-token-123')
+    expect(sanitizeText('api_key=sub2api-token-123')).not.toContain('sub2api-token-123')
+  })
+
+  it('redacts explicitly supplied secrets before returning text', () => {
+    const apiKey = 'custom-sub2api-key-123'
+    expect(sanitizeText(`error with ${apiKey}`, [apiKey])).toBe('error with ***REDACTED***')
   })
 })

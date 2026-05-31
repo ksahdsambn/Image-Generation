@@ -1,6 +1,16 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useApiKeyStore } from '../../stores/api-key'
+import * as configModule from '../../utils/config'
+
+const defaultConfig = {
+  sub2apiBaseUrl: 'https://api.example.com',
+  appTitle: 'Test',
+  historyMaxItems: 50,
+  historyMaxBytes: 524288000,
+  rememberKeyEnabled: true,
+  configError: null,
+}
 
 function createStorageMock() {
   const store: Record<string, string> = {}
@@ -21,10 +31,12 @@ let sessionMock: ReturnType<typeof createStorageMock>
 let localMock: ReturnType<typeof createStorageMock>
 
 beforeEach(() => {
+  vi.restoreAllMocks()
   sessionMock = createStorageMock()
   localMock = createStorageMock()
   vi.stubGlobal('sessionStorage', sessionMock)
   vi.stubGlobal('localStorage', localMock)
+  vi.spyOn(configModule, 'loadConfig').mockReturnValue(defaultConfig)
   setActivePinia(createPinia())
 })
 
@@ -134,5 +146,34 @@ describe('useApiKeyStore', () => {
     store.setRememberKey(false)
     expect(localMock.removeItem).toHaveBeenCalledWith('gpt_image_2_api_key_remember')
     expect(localMock.removeItem).toHaveBeenCalledWith('gpt_image_2_remember_key')
+  })
+
+  it('does not recover stale localStorage key when remember is disabled by config', () => {
+    vi.spyOn(configModule, 'loadConfig').mockReturnValue({ ...defaultConfig, rememberKeyEnabled: false })
+    localMock._store['gpt_image_2_remember_key'] = 'true'
+    localMock._store['gpt_image_2_api_key_remember'] = 'stale-sub2api-key'
+    sessionMock._store['gpt_image_2_api_key'] = 'session-sub2api-key'
+    setActivePinia(createPinia())
+
+    const store = useApiKeyStore()
+
+    expect(store.apiKey).toBe('session-sub2api-key')
+    expect(store.rememberKey).toBe(false)
+    expect(localMock.removeItem).toHaveBeenCalledWith('gpt_image_2_api_key_remember')
+    expect(localMock.removeItem).toHaveBeenCalledWith('gpt_image_2_remember_key')
+  })
+
+  it('does not write localStorage when remember is disabled by config', () => {
+    vi.spyOn(configModule, 'loadConfig').mockReturnValue({ ...defaultConfig, rememberKeyEnabled: false })
+    setActivePinia(createPinia())
+    const store = useApiKeyStore()
+
+    store.setRememberKey(true)
+    store.setApiKey('sub2api-key-that-should-stay-session-only')
+
+    expect(store.rememberKey).toBe(false)
+    expect(sessionMock.getItem('gpt_image_2_api_key')).toBe('sub2api-key-that-should-stay-session-only')
+    expect(localMock.getItem('gpt_image_2_api_key_remember')).toBeNull()
+    expect(localMock.getItem('gpt_image_2_remember_key')).toBeNull()
   })
 })

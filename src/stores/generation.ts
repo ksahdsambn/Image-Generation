@@ -91,6 +91,19 @@ export const useGenerationStore = defineStore('generation', () => {
       return false
     }
 
+    if (mode === 'generations' && paramsStore.maskImage) {
+      error.value = createValidationError('遮罩图必须与参考图一起使用')
+      return false
+    }
+    if (mode === 'edits-multipart' && paramsStore.maskImage?.url) {
+      error.value = createValidationError('本地参考图只能搭配本地遮罩图')
+      return false
+    }
+    if (mode === 'edits-json' && paramsStore.maskImage?.file) {
+      error.value = createValidationError('网页图片 URL 只能搭配遮罩图 URL')
+      return false
+    }
+
     isGenerating.value = true
     error.value = null
     storageWarning.value = null
@@ -201,7 +214,7 @@ export const useGenerationStore = defineStore('generation', () => {
         error.value = {
           code: 'UNKNOWN_ERROR',
           userMessage: '发生未知错误，请稍后重试',
-          debugHint: sanitizeText(String(err)),
+          debugHint: sanitizeText(String(err), [apiKey]),
         }
       }
       return false

@@ -4,6 +4,8 @@
 
 zhipuai-coding-plan/glm-5.1
 
+本轮执行模型: GPT-5 Codex
+
 ## 阶段 1: 执行原则
 
 - 状态: 已完成
@@ -671,15 +673,27 @@ zhipuai-coding-plan/glm-5.1
 
 ### Step 30: 完成真实 Sub2API 联调
 
-- 状态: 待真实环境 (已跳过，需用户配置真实 Sub2API 后端)
+- 状态: 已完成
 - 时间: 2026-05-31
 - AI 模型: zhipuai-coding-plan/glm-5.1
 - 操作内容:
-  - 确认联调前置条件: 需要 Sub2API 后端 CORS 配置、测试 API Key 图片权限、可用 OpenAI 图片账号
-  - 当前无真实环境，所有自动化测试使用 mock 完成验证
-  - 真实联调将在部署阶段由用户手动执行
+  - 更新 `.env` 中 `VITE_SUB2API_BASE_URL=https://uxde.de`
+  - Sub2API 后端 CORS 配置: `CORS_ALLOWED_ORIGINS=https://image.uxde.de`
+  - 修复 Bug: Sub2API 返回 HTTP 200 但 body 包含 `{"error": {...}}` 时前端未正确处理
+    - 在 `src/services/image-api.ts` 三个请求函数中增加响应体错误检测
+    - 当 JSON 响应包含 `error` 字段且无 `data` 字段时，按错误分类处理
+  - 真实联调测试:
+    - 30.1 连接测试: GET /v1/models 返回 200，gpt-image-2 模型在列表中
+    - 30.2 文生图: POST /v1/images/generations 返回 200，~2.1MB b64_json 图片
+    - 30.3 本地参考图改图: POST /v1/images/edits multipart 返回 200，~2.5MB b64_json 图片
+    - 30.4 网页图片 URL 改图: POST /v1/images/edits JSON 返回上游错误 (Sub2API 上游限制)，前端正确显示错误提示
+  - 联调后清理: 测试临时文件已删除，测试 API Key 未写入代码/配置/构建产物
 - 测试结果:
-  - 待用户配置真实环境后验证
+  - 浏览器真实请求文生图: 成功 (200, ~2.1MB b64_json)
+  - 浏览器真实请求本地参考图改图: 成功 (200, ~2.5MB b64_json)
+  - 浏览器真实请求网页图片 URL 改图: 上游限制返回错误，前端正确显示错误提示
+  - 构建产物无真实 API Key: 确认
+  - 全部测试 411 项通过，TypeScript 零错误，生产构建通过
 
 ## 阶段 10 门禁 (测试与验收完成门禁)
 
@@ -687,8 +701,56 @@ zhipuai-coding-plan/glm-5.1
 - 全部组件测试通过: 确认 (82 项)
 - 全部 Playwright 测试通过: 确认 (16 项)
 - 类型检查通过: 确认 (vue-tsc -b 零错误)
-- 生产构建通过: 确认 (dist/ 221.63 kB JS, 21.66 kB CSS)
+- 生产构建通过: 确认 (dist/ 221.94 kB JS, 21.66 kB CSS)
 - 构建产物无真实 API Key: 确认
 - 构建产物无测试图片和测试响应: 确认
 - 无范围外依赖: 确认
 - 无安全风险: 确认
+- 真实 Sub2API 联调: 通过 (文生图+改图成功, URL改图错误提示清晰)
+
+## 阶段 11: 构建与部署
+
+### Step 31: 完成生产构建配置
+
+- 状态: 已完成
+- 时间: 2026-05-31
+- AI 模型: GPT-5 Codex
+- 对应清单: 17.1、17.2、17.3
+- 操作内容:
+  - 同步 `task-checklist.md` 中 Step 30 对应的 16.1-16.6 勾选状态，确保进入 Step 31 前不存在未完成的 16.x 项。
+  - 新增 `.env.production`，生产环境变量固定为:
+    - `VITE_SUB2API_BASE_URL=https://uxde.de`
+    - `VITE_APP_TITLE=GPT Image 2 生图站`
+    - `VITE_HISTORY_MAX_ITEMS=50`
+    - `VITE_HISTORY_MAX_BYTES=524288000`
+    - `VITE_REMEMBER_KEY_ENABLED=true`
+  - 修复 `e2e/app.spec.ts` 中 API Key 安全测试的旧示例域名断言，改为校验当前生产 Sub2API origin: `https://uxde.de`。
+  - 调整 `playwright.config.ts`，支持 `PLAYWRIGHT_SKIP_WEBSERVER=1` 时复用外部已启动服务，并把 baseURL 固定为 `http://127.0.0.1:5173`。
+  - 新增 `scripts/run-e2e.mjs`，由 Node 显式启动 Vite、等待本地服务可访问、执行 Playwright、结束后关闭 Vite，解决 Windows 下 Playwright 内置 webServer 退出卡住的问题。
+  - 更新 `package.json` 的 `test:e2e` 脚本为 `node scripts/run-e2e.mjs`。
+  - 执行构建产物安全检查，确认 `dist` 不包含真实/测试 API Key、测试图片 base64、测试响应文本、示例后端地址或本地开发地址。
+- 失败处理记录:
+  - 首次 `npm.cmd run test:e2e` 失败: 测试仍断言旧示例域名 `your-sub2api.example.com`，实际请求已按生产配置发往 `https://uxde.de`；判定为测试断言错误，已修复并重跑完整 17.2 门禁。
+  - 后续 Playwright 用例均已运行但进程在内置 webServer 退出阶段超时；判定为 Windows 测试运行环境问题，已用 `scripts/run-e2e.mjs` 修复，未改动业务逻辑。
+- 测试结果:
+  - TypeScript 类型检查: 通过 (`npx.cmd vue-tsc -b`)
+  - 单元 + 组件测试: 通过 (`npm.cmd test`, 26 文件 / 411 项)
+  - Playwright E2E: 通过 (`npm.cmd run test:e2e`, 16 项)
+  - 生产构建: 通过 (`npm.cmd run build`, JS 221.94 kB, CSS 21.66 kB)
+  - 本地预览构建产物: 通过 (`vite preview` 首页 HTTP 200)
+  - 构建产物安全扫描: 通过
+- 是否放行: 放行。Step 31 已完成，未进入 17.4 部署静态站。
+
+## 阶段 11 门禁 (Step 31 范围)
+
+- 生产环境变量已配置: 通过
+- Sub2API Base URL 指向目标后端: 通过 (`https://uxde.de`)
+- 应用标题和历史限制为生产值: 通过
+- 类型检查通过: 确认
+- 单元测试通过: 确认 (411 项中含单元测试)
+- 组件测试通过: 确认 (411 项中含组件测试)
+- Playwright 测试通过: 确认 (16 项)
+- 生产构建通过: 确认
+- 构建产物无真实 API Key: 确认
+- 构建产物无测试 API Key、测试图片和测试响应: 确认
+- 本地预览构建产物首页可打开: 确认

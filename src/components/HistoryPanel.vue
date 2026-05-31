@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import { useGenerationStore } from '@/stores/generation'
 import { queryHistory, getHistoryById } from '@/storage/history-reader'
@@ -22,6 +22,7 @@ const loading = ref(false)
 const selectedRecord = ref<HistoryRecord | null>(null)
 const showFullImage = ref(false)
 const fullImageRecord = ref<HistoryRecord | null>(null)
+const fullImageUrl = ref('')
 
 const thumbnailUrls = ref<Map<number, string>>(new Map())
 
@@ -48,14 +49,24 @@ function getThumbnailUrl(record: HistoryRecord): string {
   return thumbnailUrls.value.get(record.id)!
 }
 
-function getFullImageUrl(record: HistoryRecord): string {
-  if (!record.imageBlob) return ''
-  return URL.createObjectURL(record.imageBlob)
+function revokeThumbnailUrls() {
+  for (const url of thumbnailUrls.value.values()) {
+    URL.revokeObjectURL(url)
+  }
+  thumbnailUrls.value.clear()
+}
+
+function revokeFullImageUrl() {
+  if (fullImageUrl.value) {
+    URL.revokeObjectURL(fullImageUrl.value)
+    fullImageUrl.value = ''
+  }
 }
 
 async function loadHistory() {
   loading.value = true
   try {
+    revokeThumbnailUrls()
     const start = startDate.value ? new Date(startDate.value).getTime() : null
     const end = endDate.value ? new Date(endDate.value + 'T23:59:59').getTime() : null
     historyResult.value = await queryHistory({
@@ -143,13 +154,16 @@ async function loadMore() {
 async function viewFullImage(record: HistoryRecord) {
   const full = await getHistoryById(record.id!)
   if (!full) return
+  revokeFullImageUrl()
   fullImageRecord.value = full
+  fullImageUrl.value = URL.createObjectURL(full.imageBlob)
   showFullImage.value = true
 }
 
 function closeFullImage() {
   showFullImage.value = false
   fullImageRecord.value = null
+  revokeFullImageUrl()
 }
 
 async function downloadFullImage() {
@@ -161,6 +175,11 @@ async function downloadFullImage() {
 function formatDate(ts: number): string {
   return new Date(ts).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
+
+onBeforeUnmount(() => {
+  revokeThumbnailUrls()
+  revokeFullImageUrl()
+})
 </script>
 
 <template>
@@ -314,7 +333,7 @@ function formatDate(ts: number): string {
       >
         <div class="relative max-w-4xl max-h-[90vh] bg-white rounded-lg overflow-hidden">
           <img
-            :src="getFullImageUrl(fullImageRecord)"
+            :src="fullImageUrl"
             alt="历史图片"
             class="max-w-full max-h-[80vh] object-contain"
           />

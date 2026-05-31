@@ -37,18 +37,33 @@ export async function testConnection(
 
     if (!response.ok) {
       const errorBody = await response.text().catch(() => '')
-      const appError = classifyHttpError(response.status, errorBody)
+      const appError = classifyHttpError(response.status, errorBody, [apiKey])
       return { success: false, error: appError }
+    }
+
+    const body = await response.text().catch(() => '')
+    if (hasErrorBody(body)) {
+      return { success: false, error: classifyHttpError(response.status, body, [apiKey]) }
     }
 
     return { success: true, error: null }
   } catch (error: unknown) {
     if (error instanceof TypeError || error instanceof Error) {
-      return { success: false, error: classifyNetworkError(error) }
+      return { success: false, error: classifyNetworkError(error, [apiKey]) }
     }
     return {
       success: false,
-      error: classifyNetworkError(new Error(String(error))),
+      error: classifyNetworkError(new Error(String(error)), [apiKey]),
     }
+  }
+}
+
+function hasErrorBody(body: string): boolean {
+  if (!body) return false
+  try {
+    const json = JSON.parse(body) as Record<string, unknown>
+    return 'error' in json
+  } catch {
+    return false
   }
 }

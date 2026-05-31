@@ -34,30 +34,52 @@ const ERROR_MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.UNKNOWN_ERROR]: '发生未知错误，请稍后重试',
 }
 
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 export function hasApiKeyLeak(text: string): boolean {
-  return /sk-[a-zA-Z0-9]{20,}/.test(text)
+  return /sk-[a-zA-Z0-9_-]{20,}/.test(text)
 }
 
-export function sanitizeText(text: string): string {
-  return text.replace(/sk-[a-zA-Z0-9]{20,}/g, '***REDACTED***')
+export function sanitizeText(text: string, explicitSecrets: string[] = []): string {
+  let safe = text
+  for (const secret of explicitSecrets) {
+    if (secret.trim()) {
+      safe = safe.replace(new RegExp(escapeRegExp(secret), 'g'), '***REDACTED***')
+    }
+  }
+  safe = safe.replace(/sk-[a-zA-Z0-9_-]{20,}/g, '***REDACTED***')
+  safe = safe.replace(/(Authorization\s*:\s*Bearer\s+)[^"'\s,}]+/gi, '$1***REDACTED***')
+  safe = safe.replace(/((?:api[_-]?key|token|secret|password)\s*["'=:\s]+\s*["']?)[^"',\s}]+/gi, '$1***REDACTED***')
+  return safe
 }
 
-export function classifyHttpError(status: number, body?: string): AppError {
-  const safeBody = typeof body === 'string' ? sanitizeText(body) : ''
+export function classifyHttpError(status: number, body?: string, explicitSecrets: string[] = []): AppError {
+  const safeBody = typeof body === 'string' ? sanitizeText(body, explicitSecrets) : ''
+  const lower = typeof body === 'string' ? body.toLowerCase() : ''
+
+  if (lower.includes('invalid_api_key') || lower.includes('invalid api key') || lower.includes('unauthorized')) {
+    return { code: AppErrorCode.AUTH_FAILED, userMessage: ERROR_MESSAGES[AppErrorCode.AUTH_FAILED], debugHint: safeBody || `HTTP ${status}` }
+  }
+  if (lower.includes('rate_limit') || lower.includes('rate limit') || lower.includes('too many requests')) {
+    return { code: AppErrorCode.RATE_LIMITED, userMessage: ERROR_MESSAGES[AppErrorCode.RATE_LIMITED], debugHint: safeBody || `HTTP ${status}` }
+  }
+  if (lower.includes('quota') || lower.includes('balance') || lower.includes('insufficient') || lower.includes('余额') || lower.includes('额度')) {
+    return { code: AppErrorCode.INSUFFICIENT_QUOTA, userMessage: ERROR_MESSAGES[AppErrorCode.INSUFFICIENT_QUOTA], debugHint: safeBody }
+  }
+  if (lower.includes('permission') || lower.includes('forbidden') || lower.includes('not allowed')) {
+    return { code: AppErrorCode.PERMISSION_DENIED, userMessage: ERROR_MESSAGES[AppErrorCode.PERMISSION_DENIED], debugHint: safeBody }
+  }
+  if (lower.includes('cors') || lower.includes('cross-origin') || lower.includes('access-control')) {
+    return { code: AppErrorCode.CORS_BLOCKED, userMessage: ERROR_MESSAGES[AppErrorCode.CORS_BLOCKED], debugHint: safeBody }
+  }
 
   switch (status) {
     case 401:
       return { code: AppErrorCode.AUTH_FAILED, userMessage: ERROR_MESSAGES[AppErrorCode.AUTH_FAILED], debugHint: safeBody || 'HTTP 401' }
-    case 403: {
-      const lower = safeBody.toLowerCase()
-      if (lower.includes('image') || lower.includes('图片') || lower.includes('permission')) {
-        return { code: AppErrorCode.PERMISSION_DENIED, userMessage: ERROR_MESSAGES[AppErrorCode.PERMISSION_DENIED], debugHint: safeBody }
-      }
-      if (lower.includes('quota') || lower.includes('balance') || lower.includes('余额') || lower.includes('额度') || lower.includes('insufficient')) {
-        return { code: AppErrorCode.INSUFFICIENT_QUOTA, userMessage: ERROR_MESSAGES[AppErrorCode.INSUFFICIENT_QUOTA], debugHint: safeBody }
-      }
-      return { code: AppErrorCode.PERMISSION_DENIED, userMessage: ERROR_MESSAGES[AppErrorCode.PERMISSION_DENIED], debugHint: safeBody }
-    }
+    case 403:
+      return { code: AppErrorCode.PERMISSION_DENIED, userMessage: ERROR_MESSAGES[AppErrorCode.PERMISSION_DENIED], debugHint: safeBody || 'HTTP 403' }
     case 429:
       return { code: AppErrorCode.RATE_LIMITED, userMessage: ERROR_MESSAGES[AppErrorCode.RATE_LIMITED], debugHint: safeBody || 'HTTP 429' }
     default:
@@ -68,20 +90,21 @@ export function classifyHttpError(status: number, body?: string): AppError {
   }
 }
 
-export function classifyNetworkError(error: Error): AppError {
+export function classifyNetworkError(error: Error, explicitSecrets: string[] = []): AppError {
   const msg = error.message || ''
   const lower = msg.toLowerCase()
+  const safeMsg = sanitizeText(msg, explicitSecrets)
 
   if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('network request failed')) {
     const isLikelyCors = lower.includes('cors') || lower.includes('cross-origin')
     if (isLikelyCors) {
-      return { code: AppErrorCode.CORS_BLOCKED, userMessage: ERROR_MESSAGES[AppErrorCode.CORS_BLOCKED], debugHint: sanitizeText(msg) }
+      return { code: AppErrorCode.CORS_BLOCKED, userMessage: ERROR_MESSAGES[AppErrorCode.CORS_BLOCKED], debugHint: safeMsg }
     }
-    return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: sanitizeText(msg) }
+    return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: safeMsg }
   }
 
   if (lower.includes('cors') || lower.includes('cross-origin') || lower.includes('access-control')) {
-    return { code: AppErrorCode.CORS_BLOCKED, userMessage: ERROR_MESSAGES[AppErrorCode.CORS_BLOCKED], debugHint: sanitizeText(msg) }
+    return { code: AppErrorCode.CORS_BLOCKED, userMessage: ERROR_MESSAGES[AppErrorCode.CORS_BLOCKED], debugHint: safeMsg }
   }
 
   if (lower.includes('typeerror') && lower.includes('failed to fetch')) {
@@ -89,10 +112,10 @@ export function classifyNetworkError(error: Error): AppError {
   }
 
   if (lower.includes('abort') || lower.includes('timeout') || lower.includes('timed out')) {
-    return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: sanitizeText(msg) }
+    return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: safeMsg }
   }
 
-  return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: sanitizeText(msg) }
+  return { code: AppErrorCode.NETWORK_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.NETWORK_ERROR], debugHint: safeMsg }
 }
 
 export function classifyStorageError(error: Error): AppError {

@@ -1,14 +1,19 @@
 import { defineConfig } from '@playwright/test'
 
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === '1'
+
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: 1,
-  reporter: 'html',
+  reporter: [
+    ['line'],
+    ['html', { open: 'never' }],
+  ],
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:5173',
     trace: 'on-first-retry',
     screenshot: 'on',
     video: 'retain-on-failure',
@@ -19,10 +24,12 @@ export default defineConfig({
       use: { browserName: 'chromium' },
     },
   ],
-  webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
-    timeout: 30000,
-  },
+  webServer: skipWebServer
+    ? undefined
+    : {
+        command: 'node ./node_modules/vite/bin/vite.js --host 127.0.0.1',
+        url: 'http://127.0.0.1:5173',
+        reuseExistingServer: !process.env.CI,
+        timeout: 30000,
+      },
 })
