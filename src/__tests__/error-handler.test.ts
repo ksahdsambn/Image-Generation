@@ -49,6 +49,37 @@ describe('classifyHttpError', () => {
     expect(classifyHttpError(503).code).toBe(AppErrorCode.UPSTREAM_ERROR)
   })
 
+  it('shows upstream JSON error message for 5xx responses', () => {
+    const err = classifyHttpError(500, JSON.stringify({
+      error: {
+        message: 'Unsupported size: 3840x2160',
+        type: 'invalid_request_error',
+      },
+    }))
+
+    expect(err.code).toBe(AppErrorCode.UPSTREAM_ERROR)
+    expect(err.userMessage).toContain('HTTP 500')
+    expect(err.userMessage).toContain('Unsupported size: 3840x2160')
+  })
+
+  it('shows upstream plain-text message for 5xx responses', () => {
+    const err = classifyHttpError(502, 'model provider temporarily overloaded')
+
+    expect(err.code).toBe(AppErrorCode.UPSTREAM_ERROR)
+    expect(err.userMessage).toContain('HTTP 502')
+    expect(err.userMessage).toContain('model provider temporarily overloaded')
+  })
+
+  it('shows validation details for 400 responses', () => {
+    const err = classifyHttpError(400, JSON.stringify({
+      message: 'Invalid value for quality',
+    }))
+
+    expect(err.code).toBe(AppErrorCode.VALIDATION_ERROR)
+    expect(err.userMessage).toContain('HTTP 400')
+    expect(err.userMessage).toContain('Invalid value for quality')
+  })
+
   it('classifies unknown status as UNKNOWN_ERROR', () => {
     const err = classifyHttpError(418)
     expect(err.code).toBe(AppErrorCode.UNKNOWN_ERROR)
@@ -74,6 +105,16 @@ describe('classifyHttpError', () => {
       const err = classifyHttpError(status, 'sk-abcdef1234567890abcdef1234567890abcdef')
       expect(err.userMessage).not.toContain('sk-')
     }
+  })
+
+  it('sanitizes explicitly supplied API Key from displayed upstream message', () => {
+    const apiKey = 'sub2api-display-key-123'
+    const err = classifyHttpError(500, JSON.stringify({
+      error: { message: `provider echoed ${apiKey}` },
+    }), [apiKey])
+
+    expect(err.userMessage).not.toContain(apiKey)
+    expect(err.userMessage).toContain('***REDACTED***')
   })
 })
 

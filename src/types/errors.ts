@@ -34,8 +34,85 @@ const ERROR_MESSAGES: Record<AppErrorCode, string> = {
   [AppErrorCode.UNKNOWN_ERROR]: '发生未知错误，请稍后重试',
 }
 
+const MAX_DISPLAY_ERROR_LENGTH = 240
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function collapseWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim()
+}
+
+function stripHtml(value: string): string {
+  return value
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, ' ')
+    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+}
+
+function truncateForDisplay(value: string): string {
+  return value.length > MAX_DISPLAY_ERROR_LENGTH
+    ? `${value.slice(0, MAX_DISPLAY_ERROR_LENGTH - 1)}…`
+    : value
+}
+
+function normalizeDisplayMessage(value: string, explicitSecrets: string[] = []): string {
+  return truncateForDisplay(collapseWhitespace(stripHtml(sanitizeText(value, explicitSecrets))))
+}
+
+function pickStringField(record: Record<string, unknown>, keys: string[]): string | null {
+  for (const key of keys) {
+    const value = record[key]
+    if (typeof value === 'string' && value.trim()) return value
+  }
+  return null
+}
+
+function extractStructuredErrorMessage(value: unknown): string | null {
+  if (typeof value === 'string') return value.trim() || null
+
+  if (Array.isArray(value)) {
+    const messages = value
+      .map(item => extractStructuredErrorMessage(item))
+      .filter((item): item is string => Boolean(item))
+    return messages.length > 0 ? messages.join('; ') : null
+  }
+
+  if (typeof value !== 'object' || value === null) return null
+
+  const record = value as Record<string, unknown>
+  const directMessage = pickStringField(record, [
+    'message',
+    'detail',
+    'msg',
+    'error_description',
+    'reason',
+    'description',
+  ])
+  if (directMessage) return directMessage
+
+  const nestedMessage = extractStructuredErrorMessage(record.error)
+    ?? extractStructuredErrorMessage(record.errors)
+    ?? extractStructuredErrorMessage(record.data)
+  if (nestedMessage) return nestedMessage
+
+  const fallbackCode = pickStringField(record, ['code', 'type'])
+  return fallbackCode
+}
+
+function getResponseErrorMessage(body?: string, explicitSecrets: string[] = []): string {
+  if (typeof body !== 'string' || !body.trim()) return ''
+
+  try {
+    const parsed = JSON.parse(body) as unknown
+    const extracted = extractStructuredErrorMessage(parsed)
+    if (extracted) return normalizeDisplayMessage(extracted, explicitSecrets)
+  } catch {
+    // Plain-text and HTML error bodies are handled below.
+  }
+
+  return normalizeDisplayMessage(body, explicitSecrets)
 }
 
 export function hasApiKeyLeak(text: string): boolean {
@@ -58,6 +135,7 @@ export function sanitizeText(text: string, explicitSecrets: string[] = []): stri
 export function classifyHttpError(status: number, body?: string, explicitSecrets: string[] = []): AppError {
   const safeBody = typeof body === 'string' ? sanitizeText(body, explicitSecrets) : ''
   const lower = typeof body === 'string' ? body.toLowerCase() : ''
+  const responseMessage = getResponseErrorMessage(body, explicitSecrets)
 
   if (lower.includes('invalid_api_key') || lower.includes('invalid api key') || lower.includes('unauthorized')) {
     return { code: AppErrorCode.AUTH_FAILED, userMessage: ERROR_MESSAGES[AppErrorCode.AUTH_FAILED], debugHint: safeBody || `HTTP ${status}` }
@@ -76,6 +154,15 @@ export function classifyHttpError(status: number, body?: string, explicitSecrets
   }
 
   switch (status) {
+    case 400:
+    case 422:
+      return {
+        code: AppErrorCode.VALIDATION_ERROR,
+        userMessage: responseMessage
+          ? `请求参数错误（HTTP ${status}）：${responseMessage}`
+          : ERROR_MESSAGES[AppErrorCode.VALIDATION_ERROR],
+        debugHint: safeBody || `HTTP ${status}`,
+      }
     case 401:
       return { code: AppErrorCode.AUTH_FAILED, userMessage: ERROR_MESSAGES[AppErrorCode.AUTH_FAILED], debugHint: safeBody || 'HTTP 401' }
     case 403:
@@ -84,9 +171,21 @@ export function classifyHttpError(status: number, body?: string, explicitSecrets
       return { code: AppErrorCode.RATE_LIMITED, userMessage: ERROR_MESSAGES[AppErrorCode.RATE_LIMITED], debugHint: safeBody || 'HTTP 429' }
     default:
       if (status >= 500) {
-        return { code: AppErrorCode.UPSTREAM_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.UPSTREAM_ERROR], debugHint: `HTTP ${status}: ${safeBody}` }
+        return {
+          code: AppErrorCode.UPSTREAM_ERROR,
+          userMessage: responseMessage
+            ? `上游错误（HTTP ${status}）：${responseMessage}`
+            : ERROR_MESSAGES[AppErrorCode.UPSTREAM_ERROR],
+          debugHint: `HTTP ${status}: ${safeBody}`,
+        }
       }
-      return { code: AppErrorCode.UNKNOWN_ERROR, userMessage: ERROR_MESSAGES[AppErrorCode.UNKNOWN_ERROR], debugHint: `HTTP ${status}: ${safeBody}` }
+      return {
+        code: AppErrorCode.UNKNOWN_ERROR,
+        userMessage: responseMessage
+          ? `请求失败（HTTP ${status}）：${responseMessage}`
+          : ERROR_MESSAGES[AppErrorCode.UNKNOWN_ERROR],
+        debugHint: `HTTP ${status}: ${safeBody}`,
+      }
   }
 }
 
