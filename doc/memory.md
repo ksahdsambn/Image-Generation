@@ -1,5 +1,19 @@
 # 修复记录
 
+## 2026-06-01 UI 配色层次增强
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `colorize` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端 UI 仅做颜色系统、状态色、层次色、背景色、按钮色、边框色和强调色增强；未修改生成逻辑、上传逻辑、历史逻辑、密钥逻辑、API 请求逻辑、store、service、types、数据结构、核心功能入口或页面主要布局分配。
+- 修改内容:
+  - `src/style.css`: 将原有分散的暖色 studio 颜色升级为 OKLCH 语义 token，补充暖中性、矿物绿灰、青绿色、赭橙、琥珀、成功绿、错误玫红等角色色，并通过 utility 层覆盖 Tailwind 工具类，保证颜色增强稳定生效。
+  - `src/style.css`: 优化页面背景、顶栏、卡片表面、主按钮、次级/图标按钮、输入框、选择器、上传区、结果空状态、历史空状态、历史选中态、图片弹窗和焦点环颜色表现，降低整页米色占比，保留摄影工作台基调并增加冷暖层次。
+  - `src/style.css`: 统一错误、警告、成功、连接状态、记住密钥风险提示、URL 校验错误、存储警告等语义状态色，提升状态辨识度和文本可读性。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - Playwright 视觉/响应检查: `1440x900` 与 `375x812` 注入 Prompt、API Key 和 URL 错误状态后 document/body horizontal overflow 均为 0。
+  - 本地预览服务: `http://127.0.0.1:5174/`。
+
 ## 2026-06-01 UI 质量审查与可访问性修复
 
 - 操作模型ID: GPT-5 Codex
