@@ -15,6 +15,23 @@ function createMockFetch(response: any, ok = true, status = 200) {
   })
 }
 
+function createMockResponse(response: any, ok = true, status = 200) {
+  return {
+    ok,
+    status,
+    json: () => Promise.resolve(response),
+    text: () => Promise.resolve(JSON.stringify(response)),
+  }
+}
+
+function createMockFetchSequence(responses: Array<{ response: any; ok?: boolean; status?: number }>) {
+  let index = 0
+  return vi.fn().mockImplementation(() => {
+    const next = responses[index++]
+    return Promise.resolve(createMockResponse(next.response, next.ok ?? true, next.status ?? 200))
+  })
+}
+
 function createMockFetchError(status: number, body = '') {
   return vi.fn().mockResolvedValue({
     ok: false,
@@ -26,6 +43,11 @@ function createMockFetchError(status: number, body = '') {
 
 function createMockFetchNetworkError(errorMsg: string) {
   return vi.fn().mockRejectedValue(new TypeError(errorMsg))
+}
+
+function getJsonRequestBody(mockFetch: ReturnType<typeof vi.fn>, callIndex = 0) {
+  const options = mockFetch.mock.calls[callIndex][1] as RequestInit
+  return JSON.parse(options.body as string)
 }
 
 const MOCK_API_RESPONSE = {
@@ -155,6 +177,46 @@ describe('Generation Store - generate (Step 22)', () => {
       expect(calledUrl).toContain('/v1/images/generations')
     })
 
+    it('requests once for n=1 and omits n from the request body', async () => {
+      const mockFetch = createMockFetch(MOCK_API_RESPONSE)
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'single image'
+      paramsStore.setCount(1)
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(true)
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(getJsonRequestBody(mockFetch)).not.toHaveProperty('n')
+    })
+
+    it('requests n=3 as three single-image calls without n in any body', async () => {
+      const mockFetch = createMockFetchSequence([
+        { response: MOCK_API_RESPONSE },
+        { response: MOCK_API_RESPONSE },
+        { response: MOCK_API_RESPONSE },
+      ])
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'three images'
+      paramsStore.setCount(3)
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(true)
+      expect(mockFetch).toHaveBeenCalledTimes(3)
+      expect(getJsonRequestBody(mockFetch, 0)).not.toHaveProperty('n')
+      expect(getJsonRequestBody(mockFetch, 1)).not.toHaveProperty('n')
+      expect(getJsonRequestBody(mockFetch, 2)).not.toHaveProperty('n')
+      expect(generationStore.currentResults.length).toBe(3)
+      expect(generationStore.completedCount).toBe(3)
+      expect(generationStore.targetCount).toBe(3)
+
+      const db = getDatabase()
+      expect(await db.history.count()).toBe(3)
+      const record = await db.history.toCollection().first()
+      expect(record!.n).toBe(3)
+    })
+
     it('sets results and lastGenerationTime on success', async () => {
       const mockFetch = createMockFetch(MOCK_API_RESPONSE)
       apiKeyStore.setApiKey('sk-test-key-1234567890')
@@ -263,6 +325,26 @@ describe('Generation Store - generate (Step 22)', () => {
       expect(calledUrl).toContain('/v1/images/edits')
     })
 
+    it('sends local reference edits as repeated single-image requests without n', async () => {
+      const mockFetch = createMockFetchSequence([
+        { response: MOCK_API_RESPONSE },
+        { response: MOCK_API_RESPONSE },
+      ])
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'edit twice'
+      paramsStore.setCount(2)
+      const file = new File(['test'], 'test.png', { type: 'image/png' })
+      paramsStore.addLocalImage({ file, previewUrl: 'blob:test' })
+
+      await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      for (const call of mockFetch.mock.calls) {
+        const options = call[1] as RequestInit
+        expect((options.body as FormData).get('n')).toBeNull()
+      }
+    })
+
     it('writes history with requestMode edits-multipart', async () => {
       const mockFetch = createMockFetch(MOCK_API_RESPONSE)
       apiKeyStore.setApiKey('sk-test-key-1234567890')
@@ -293,6 +375,23 @@ describe('Generation Store - generate (Step 22)', () => {
       expect(calledUrl).toContain('/v1/images/edits')
       const callOptions = mockFetch.mock.calls[0][1] as RequestInit
       expect(callOptions.headers).toHaveProperty('Content-Type')
+    })
+
+    it('sends web URL edits as repeated single-image requests without n', async () => {
+      const mockFetch = createMockFetchSequence([
+        { response: MOCK_API_RESPONSE },
+        { response: MOCK_API_RESPONSE },
+      ])
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'edit this url twice'
+      paramsStore.setCount(2)
+      paramsStore.addWebImageUrl('https://example.com/image.png')
+
+      await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(getJsonRequestBody(mockFetch, 0)).not.toHaveProperty('n')
+      expect(getJsonRequestBody(mockFetch, 1)).not.toHaveProperty('n')
     })
 
     it('writes history with requestMode edits-json', async () => {
@@ -378,6 +477,46 @@ describe('Generation Store - generate (Step 22)', () => {
       const db = getDatabase()
       const count = await db.history.count()
       expect(count).toBe(0)
+    })
+
+    it('keeps successful images and history when a later single-image call fails', async () => {
+      const mockFetch = createMockFetchSequence([
+        { response: MOCK_API_RESPONSE },
+        { response: { error: 'Server error' }, ok: false, status: 500 },
+      ])
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'partial failure'
+      paramsStore.setCount(3)
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(false)
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(generationStore.currentResults.length).toBe(1)
+      expect(generationStore.completedCount).toBe(1)
+      expect(generationStore.error).toBeTruthy()
+      expect(generationStore.error!.userMessage).toContain('已生成 1/3')
+
+      const db = getDatabase()
+      expect(await db.history.count()).toBe(1)
+    })
+
+    it('keeps first-call failure behavior and does not write history', async () => {
+      const mockFetch = createMockFetchError(500, 'Server error')
+      apiKeyStore.setApiKey('sk-test-key-1234567890')
+      paramsStore.prompt = 'first failure'
+      paramsStore.setCount(3)
+
+      const result = await generationStore.generate(apiKeyStore, paramsStore, mockFetch)
+
+      expect(result).toBe(false)
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+      expect(generationStore.currentResults.length).toBe(0)
+      expect(generationStore.error).toBeTruthy()
+      expect(generationStore.error!.userMessage).not.toContain('已生成')
+
+      const db = getDatabase()
+      expect(await db.history.count()).toBe(0)
     })
 
     it('preserves previous results on new failure so user can retry', async () => {

@@ -207,6 +207,14 @@ describe('useGenerationParamsStore', () => {
     expect(body!.prompt).toBe('hello world')
   })
 
+  it('buildRequestBody omits n because API requests are single-image', () => {
+    const store = useGenerationParamsStore()
+    store.prompt = 'Test'
+    store.setCount(3)
+    const body = store.buildRequestBody()
+    expect(body).not.toHaveProperty('n')
+  })
+
   it('buildRequestBody does not include compression for png', () => {
     const store = useGenerationParamsStore()
     store.prompt = 'Test'

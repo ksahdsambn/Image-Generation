@@ -1,15 +1,15 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { ParsedImageResult } from '@/types/api'
+import { computed, ref } from 'vue'
+import type { ApiResponse, ParsedImageResult } from '@/types/api'
 import type { AppError } from '@/types/errors'
 import { createValidationError, sanitizeText } from '@/types/errors'
 import { decideRequestMode } from '@/services/image-api'
-import type { GenerationsParams, EditsMultipartParams, EditsJsonParams } from '@/services/image-api'
-import { sendGenerationsRequest, sendEditsMultipartRequest, sendEditsJsonRequest } from '@/services/image-api'
+import type { EditsJsonParams, EditsMultipartParams, GenerationsParams } from '@/services/image-api'
+import { sendEditsJsonRequest, sendEditsMultipartRequest, sendGenerationsRequest } from '@/services/image-api'
 import { parseApiResponse } from '@/services/response-parser'
-import { writeMultipleHistory } from '@/storage/history-writer'
 import { enforceHistoryLimits } from '@/storage/history-cleaner'
-import type { LocalImage, WebImageUrl } from '@/types/generation'
+import { writeMultipleHistory } from '@/storage/history-writer'
+import { MAX_IMAGE_COUNT, type LocalImage, type WebImageUrl } from '@/types/generation'
 import type { useApiKeyStore } from '@/stores/api-key'
 import type { useGenerationParamsStore } from '@/stores/generation-params'
 
@@ -19,8 +19,48 @@ export const useGenerationStore = defineStore('generation', () => {
   const error = ref<AppError | null>(null)
   const lastGenerationTime = ref<number | null>(null)
   const storageWarning = ref<AppError | null>(null)
+  const completedCount = ref(0)
+  const targetCount = ref(0)
 
   const hasResults = computed(() => currentResults.value.length > 0)
+  const loadingMessage = computed(() => {
+    if (targetCount.value > 1) {
+      const activeCount = Math.min(completedCount.value + 1, targetCount.value)
+      return `图片生成中 ${activeCount}/${targetCount.value}`
+    }
+    return '图片生成中，请稍候...'
+  })
+
+  function normalizeTargetCount(value: number): number {
+    if (!Number.isInteger(value)) return 1
+    return Math.min(Math.max(value, 1), MAX_IMAGE_COUNT)
+  }
+
+  function normalizeGenerationError(err: unknown, apiKey: string): AppError {
+    const appError = err as AppError
+    if (appError && typeof appError === 'object' && 'code' in appError && 'userMessage' in appError) {
+      return appError
+    }
+    return {
+      code: 'UNKNOWN_ERROR',
+      userMessage: '发生未知错误，请稍后重试',
+      debugHint: sanitizeText(String(err), [apiKey]),
+    }
+  }
+
+  function createPartialFailureError(completed: number, target: number, cause: AppError): AppError {
+    return {
+      ...cause,
+      userMessage: `已生成 ${completed}/${target}，剩余图片生成失败：${cause.userMessage}`,
+    }
+  }
+
+  function touchLastGenerationTime() {
+    const now = Date.now()
+    lastGenerationTime.value = lastGenerationTime.value !== null && now <= lastGenerationTime.value
+      ? lastGenerationTime.value + 1
+      : now
+  }
 
   function _releaseResults(results: ParsedImageResult[]) {
     for (const r of results) {
@@ -48,7 +88,7 @@ export const useGenerationStore = defineStore('generation', () => {
   function setResults(results: ParsedImageResult[]) {
     _releaseResults(currentResults.value)
     currentResults.value = results
-    lastGenerationTime.value = Date.now()
+    touchLastGenerationTime()
   }
 
   function setError(err: AppError | null) {
@@ -57,7 +97,11 @@ export const useGenerationStore = defineStore('generation', () => {
 
   function setGenerating(value: boolean) {
     isGenerating.value = value
-    if (value) error.value = null
+    if (value) {
+      error.value = null
+      completedCount.value = 0
+      targetCount.value = 0
+    }
   }
 
   function clearAll() {
@@ -66,6 +110,56 @@ export const useGenerationStore = defineStore('generation', () => {
     error.value = null
     lastGenerationTime.value = null
     storageWarning.value = null
+    completedCount.value = 0
+    targetCount.value = 0
+  }
+
+  async function sendSingleImageRequest(
+    apiKey: string,
+    trimmedPrompt: string,
+    paramsStore: ReturnType<typeof useGenerationParamsStore>,
+    mode: 'generations' | 'edits-multipart' | 'edits-json',
+    fetchFn?: typeof fetch,
+  ): Promise<ApiResponse> {
+    const commonParams = {
+      prompt: trimmedPrompt,
+      size: paramsStore.size,
+      quality: paramsStore.quality,
+      background: paramsStore.background,
+      output_format: paramsStore.outputFormat,
+      output_compression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
+    }
+
+    if (mode === 'generations') {
+      const params: GenerationsParams = commonParams
+      return fetchFn
+        ? sendGenerationsRequest(apiKey, params, fetchFn)
+        : sendGenerationsRequest(apiKey, params)
+    }
+
+    if (mode === 'edits-multipart') {
+      const images = paramsStore.localImages.map((img: LocalImage) => img.file)
+      const maskFile = paramsStore.maskImage?.file
+      const params: EditsMultipartParams = {
+        ...commonParams,
+        images,
+        mask: maskFile,
+      }
+      return fetchFn
+        ? sendEditsMultipartRequest(apiKey, params, fetchFn)
+        : sendEditsMultipartRequest(apiKey, params)
+    }
+
+    const imageUrls = paramsStore.webImageUrls.map((item: WebImageUrl) => item.url)
+    const maskUrl = paramsStore.maskImage?.url
+    const params: EditsJsonParams = {
+      ...commonParams,
+      imageUrls,
+      maskUrl,
+    }
+    return fetchFn
+      ? sendEditsJsonRequest(apiKey, params, fetchFn)
+      : sendEditsJsonRequest(apiKey, params)
   }
 
   async function generate(
@@ -107,121 +201,78 @@ export const useGenerationStore = defineStore('generation', () => {
     isGenerating.value = true
     error.value = null
     storageWarning.value = null
+    completedCount.value = 0
+    targetCount.value = normalizeTargetCount(paramsStore.n)
 
     try {
-      let apiResponse
-
-      if (mode === 'generations') {
-        const params: GenerationsParams = {
-          prompt: trimmedPrompt,
-          size: paramsStore.size,
-          n: paramsStore.n,
-          quality: paramsStore.quality,
-          background: paramsStore.background,
-          output_format: paramsStore.outputFormat,
-          output_compression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
-        }
-        apiResponse = fetchFn
-          ? await sendGenerationsRequest(apiKey, params, fetchFn)
-          : await sendGenerationsRequest(apiKey, params)
-      } else if (mode === 'edits-multipart') {
-        const images = paramsStore.localImages.map((img: LocalImage) => img.file)
-        const maskFile = paramsStore.maskImage?.file
-        const params: EditsMultipartParams = {
-          prompt: trimmedPrompt,
-          images,
-          mask: maskFile,
-          size: paramsStore.size,
-          n: paramsStore.n,
-          quality: paramsStore.quality,
-          background: paramsStore.background,
-          output_format: paramsStore.outputFormat,
-          output_compression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
-        }
-        apiResponse = fetchFn
-          ? await sendEditsMultipartRequest(apiKey, params, fetchFn)
-          : await sendEditsMultipartRequest(apiKey, params)
-      } else {
-        const imageUrls = paramsStore.webImageUrls.map((item: WebImageUrl) => item.url)
-        const maskUrl = paramsStore.maskImage?.url
-        const params: EditsJsonParams = {
-          prompt: trimmedPrompt,
-          imageUrls,
-          maskUrl,
-          size: paramsStore.size,
-          n: paramsStore.n,
-          quality: paramsStore.quality,
-          background: paramsStore.background,
-          output_format: paramsStore.outputFormat,
-          output_compression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
-        }
-        apiResponse = fetchFn
-          ? await sendEditsJsonRequest(apiKey, params, fetchFn)
-          : await sendEditsJsonRequest(apiKey, params)
-      }
-
-      const parsedResults = parseApiResponse(apiResponse, paramsStore.outputFormat)
       const safePrompt = sanitizeText(trimmedPrompt, [apiKey])
-      const safeResults = parsedResults.map((result) => ({
-        ...result,
-        revisedPrompt: result.revisedPrompt ? sanitizeText(result.revisedPrompt, [apiKey]) : result.revisedPrompt,
-      }))
-      if (safeResults.length === 0) {
-        error.value = createValidationError('生成结果为空，请重试')
-        return false
-      }
+      let startedNewResults = false
+      let requestsCompleted = 0
 
-      _releaseResults(currentResults.value)
-      currentResults.value = safeResults
+      while (requestsCompleted < targetCount.value) {
+        const apiResponse = await sendSingleImageRequest(apiKey, trimmedPrompt, paramsStore, mode, fetchFn)
+        requestsCompleted++
 
-      const writeResult = await writeMultipleHistory(
-        safeResults.map((r) => ({
-          imageBlob: r.blob,
-          revisedPrompt: r.revisedPrompt ?? null,
-        })),
-        {
-          prompt: safePrompt,
-          model: 'gpt-image-2',
-          size: paramsStore.size,
-          quality: paramsStore.quality,
-          background: paramsStore.background,
-          outputFormat: paramsStore.outputFormat,
-          outputCompression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
-          n: paramsStore.n,
-          requestMode: mode,
-        },
-      )
+        const parsedResults = parseApiResponse(apiResponse, paramsStore.outputFormat)
+        const safeResults = parsedResults.map((result) => ({
+          ...result,
+          revisedPrompt: result.revisedPrompt ? sanitizeText(result.revisedPrompt, [apiKey]) : result.revisedPrompt,
+        }))
+        if (safeResults.length === 0) {
+          throw createValidationError('生成结果为空，请重试')
+        }
 
-      if (writeResult.failureCount > 0 && writeResult.errors.length > 0) {
-        if (writeResult.failureCount === safeResults.length) {
-          storageWarning.value = {
-            code: 'STORAGE_ERROR',
-            userMessage: '图片已生成，但保存到本地历史失败，请立即下载。可尝试清空历史记录后重新生成。',
-            debugHint: 'All writes failed',
+        if (!startedNewResults) {
+          _releaseResults(currentResults.value)
+          currentResults.value = []
+          startedNewResults = true
+        }
+
+        currentResults.value.push(...safeResults)
+        completedCount.value = Math.min(targetCount.value, completedCount.value + safeResults.length)
+
+        const writeResult = await writeMultipleHistory(
+          safeResults.map((r) => ({
+            imageBlob: r.blob,
+            revisedPrompt: r.revisedPrompt ?? null,
+          })),
+          {
+            prompt: safePrompt,
+            model: 'gpt-image-2',
+            size: paramsStore.size,
+            quality: paramsStore.quality,
+            background: paramsStore.background,
+            outputFormat: paramsStore.outputFormat,
+            outputCompression: paramsStore.compressionEnabled ? paramsStore.outputCompression : null,
+            n: paramsStore.n,
+            requestMode: mode,
+          },
+        )
+
+        if (writeResult.failureCount > 0 && writeResult.errors.length > 0) {
+          if (writeResult.failureCount === safeResults.length) {
+            storageWarning.value = {
+              code: 'STORAGE_ERROR',
+              userMessage: '图片已生成，但保存到本地历史失败，请立即下载。可尝试清空历史记录后重新生成。',
+              debugHint: 'All writes failed',
+            }
+          } else {
+            storageWarning.value = writeResult.errors[0]
           }
-        } else {
+        } else if (writeResult.failureCount > 0) {
           storageWarning.value = writeResult.errors[0]
         }
-      } else if (writeResult.failureCount > 0) {
-        storageWarning.value = writeResult.errors[0]
+
+        await enforceHistoryLimits()
+        touchLastGenerationTime()
       }
-
-      await enforceHistoryLimits()
-
-      lastGenerationTime.value = Date.now()
 
       return true
     } catch (err: unknown) {
-      const appError = err as AppError
-      if (appError && 'code' in appError && 'userMessage' in appError) {
-        error.value = appError
-      } else {
-        error.value = {
-          code: 'UNKNOWN_ERROR',
-          userMessage: '发生未知错误，请稍后重试',
-          debugHint: sanitizeText(String(err), [apiKey]),
-        }
-      }
+      const appError = normalizeGenerationError(err, apiKey)
+      error.value = completedCount.value > 0
+        ? createPartialFailureError(completedCount.value, targetCount.value, appError)
+        : appError
       return false
     } finally {
       isGenerating.value = false
@@ -234,7 +285,10 @@ export const useGenerationStore = defineStore('generation', () => {
     error,
     lastGenerationTime,
     storageWarning,
+    completedCount,
+    targetCount,
     hasResults,
+    loadingMessage,
     clearResults,
     removeResult,
     setResults,

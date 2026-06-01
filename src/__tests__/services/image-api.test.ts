@@ -83,9 +83,9 @@ describe('buildGenerationsBody', () => {
     expect(body.size).toBe('1024x1024')
   })
 
-  it('includes n when > 1', () => {
+  it('omits n even when greater than 1', () => {
     const body = buildGenerationsBody({ prompt: 'a cat', n: 3 })
-    expect(body.n).toBe(3)
+    expect(body.n).toBeUndefined()
   })
 
   it('omits n when 1', () => {
@@ -428,6 +428,16 @@ describe('buildEditsMultipartBody', () => {
     const contentTypeEntries = entries.filter(([key]) => key === 'Content-Type')
     expect(contentTypeEntries.length).toBe(0)
   })
+
+  it('omits n even when greater than 1', () => {
+    const formData = buildEditsMultipartBody({
+      prompt: 'edit',
+      images: [createPngFile()],
+      n: 3,
+    })
+
+    expect(formData.get('n')).toBeNull()
+  })
 })
 
 describe('sendEditsMultipartRequest', () => {
@@ -645,7 +655,7 @@ describe('buildEditsJsonBody', () => {
     expect(body.mask).toBeUndefined()
   })
 
-  it('includes optional params', () => {
+  it('includes optional params but omits n', () => {
     const body = buildEditsJsonBody({
       prompt: 'edit',
       imageUrls: ['https://example.com/img.png'],
@@ -661,7 +671,7 @@ describe('buildEditsJsonBody', () => {
     expect(body.background).toBe('transparent')
     expect(body.output_format).toBe('webp')
     expect(body.output_compression).toBe(75)
-    expect(body.n).toBe(3)
+    expect(body.n).toBeUndefined()
   })
 })
 

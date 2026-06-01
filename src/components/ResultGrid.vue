@@ -24,7 +24,7 @@ async function copyImage(index: number) {
   if (!result) return
   try {
     await navigator.clipboard.write([
-      new ClipboardItem({ [result.mimeType]: result.blob })
+      new ClipboardItem({ [result.mimeType]: result.blob }),
     ])
   } catch {
     try {
@@ -58,9 +58,9 @@ function downloadAll() {
       </div>
     </div>
 
-    <div v-else-if="generationStore.isGenerating" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-600" data-testid="loading-state" role="status" aria-live="polite" aria-busy="true">
+    <div v-if="generationStore.isGenerating && !generationStore.hasResults" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-600" data-testid="loading-state" role="status" aria-live="polite" aria-busy="true">
       <div class="w-9 h-9 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mb-3 shadow-[0_0_24px_rgb(18_126_115_/_0.18)]" aria-hidden="true"></div>
-      <p class="px-3 text-center text-sm font-medium">图片生成中，请稍候...</p>
+      <p class="px-3 text-center text-sm font-medium">{{ generationStore.loadingMessage }}</p>
     </div>
 
     <div v-else-if="!generationStore.hasResults" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-600" data-testid="empty-state">
@@ -72,6 +72,11 @@ function downloadAll() {
     </div>
 
     <template v-else>
+      <div v-if="generationStore.isGenerating" class="mb-3 flex min-w-0 items-center gap-2 rounded-lg border border-teal-200 bg-teal-50/90 px-3 py-2 text-sm font-medium text-teal-800 shadow-sm" data-testid="loading-progress" role="status" aria-live="polite" aria-busy="true">
+        <div class="h-4 w-4 shrink-0 rounded-full border-2 border-teal-700 border-t-transparent animate-spin" aria-hidden="true"></div>
+        <span class="min-w-0 break-words">{{ generationStore.loadingMessage }}</span>
+      </div>
+
       <div class="flex min-w-0 flex-wrap items-center justify-between gap-2 sm:gap-3 mb-3">
         <h2 class="min-w-0 text-sm font-semibold text-stone-700">
           生成结果 ({{ generationStore.currentResults.length }})

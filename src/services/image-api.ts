@@ -32,7 +32,6 @@ export function buildGenerationsBody(params: GenerationsParams): Record<string, 
     response_format: RESPONSE_FORMAT,
   }
   if (params.size) body.size = params.size
-  if (params.n != null && params.n > 1) body.n = params.n
   if (params.quality) body.quality = params.quality
   if (params.background) body.background = params.background
   if (params.output_format) body.output_format = params.output_format
@@ -119,7 +118,6 @@ export function buildEditsMultipartBody(params: EditsMultipartParams): FormData 
   if (params.background) formData.append('background', params.background)
   if (params.output_format) formData.append('output_format', params.output_format)
   if (params.output_compression != null) formData.append('output_compression', String(params.output_compression))
-  if (params.n != null && params.n > 1) formData.append('n', String(params.n))
 
   return formData
 }
@@ -258,7 +256,6 @@ export function buildEditsJsonBody(params: EditsJsonParams): Record<string, unkn
   if (params.background) body.background = params.background
   if (params.output_format) body.output_format = params.output_format
   if (params.output_compression != null) body.output_compression = params.output_compression
-  if (params.n != null && params.n > 1) body.n = params.n
 
   return body
 }

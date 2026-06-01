@@ -1,5 +1,24 @@
 # 修复记录
 
+## 2026-06-01 多数量生成拆分为单图请求
+- 操作模型ID: GPT-5 Codex
+- 范围: 保持 `/v1/images/generations` 与 `/v1/images/edits` 现有调用方式，不迁移 `/v1/responses`，仅调整前端请求构建、生成 store 流程、结果 loading 进度展示和相关测试；未修改 Sub2API 后端、API Key 管理、下载/复制/删除结果或历史清理功能。
+- 修改内容:
+  - `src/services/image-api.ts`: 文生图 JSON、本地参考图 multipart、网页 URL 参考图 JSON 的请求 body builder 均不再写入 `n` 字段，即使传入 `n > 1` 也保持单图请求体。
+  - `src/stores/generation.ts`: 将一次 `generate()` 改为按用户选择数量顺序循环多次单图请求；每次复用同一 prompt、尺寸、质量、背景、输出格式和压缩参数；首张成功后替换旧结果，后续成功立即追加到当前结果并逐张写入历史，历史记录中的 `n` 仍记录用户选择的总数量。
+  - `src/stores/generation.ts`: 新增 `completedCount`、`targetCount` 与 `loadingMessage`；首张失败保持原失败行为且不写历史，部分成功后失败会保留已成功图片并提示“已生成 X/N，剩余图片生成失败：...”
+  - `src/components/ResultGrid.vue`: loading 文案改为使用 store 进度文案；已有结果继续生成时展示当前结果并在结果区顶部显示进度状态。
+  - `src/stores/generation-params.ts`: 辅助请求体构建也不再包含 `n`，避免后续复用时误发多图参数。
+- 测试覆盖:
+  - `n=1` 只请求 1 次且请求体不包含 `n`。
+  - `n=3` 顺序发 3 次单图请求，每次请求体不包含 `n`，成功后当前结果与历史记录均为 3 条。
+  - 第 1 张成功、第 2 张失败时保留 1 张结果和 1 条历史，并显示部分失败提示；第 1 张失败时不写历史且不显示空结果。
+  - 本地参考图编辑和网页 URL 参考图编辑在多数量模式下同样不发送 `n`。
+- 验证:
+  - 定向测试: `npm.cmd test -- --run src/__tests__/services/image-api.test.ts src/__tests__/stores/generation-params.test.ts src/__tests__/stores/generation.test.ts src/__tests__/components/ResultGrid.test.ts`: 4 files / 164 tests passed。
+  - `npm.cmd run test`: 26 files / 446 tests passed。
+  - `npm.cmd run build`: passed，CSS 69.36 kB / gzip 12.50 kB，JS 233.28 kB / gzip 79.67 kB。
+
 ## 2026-06-01 UI 体验与表现性能优化
 - 操作模型ID: GPT-5 Codex
 - 范围: 使用 `optimize` skill 对当前 Vue/Tailwind 前端仅做 UI 层面的加载体验、渲染效率、视觉反馈、动画性能、图片展示稳定性和交互流畅度优化；未修改生成逻辑、API 请求逻辑、上传逻辑、历史逻辑、密钥逻辑、store、service、types、数据结构、核心功能、三栏布局分配、移动端堆叠顺序或页面信息架构。

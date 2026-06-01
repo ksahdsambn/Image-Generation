@@ -135,7 +135,6 @@ export const useGenerationParamsStore = defineStore('generationParams', () => {
       model: MODEL,
       prompt: trimmedPrompt,
       size: size.value,
-      n: n.value,
       quality: quality.value,
       background: background.value,
       output_format: outputFormat.value,
