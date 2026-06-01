@@ -54,7 +54,7 @@ function removeUrl(index: number) {
 
 <template>
   <div class="reference-images min-w-0 space-y-3.5" data-testid="reference-images" aria-label="参考图和网页图片">
-    <h3 class="text-sm font-semibold text-stone-700">参考图</h3>
+    <h3 class="text-sm font-semibold text-stone-700">参考图 (可选)</h3>
 
     <div v-if="store.hasMixedRefSources" class="flex min-w-0 items-center gap-2 p-2 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-800 text-xs" data-testid="mix-conflict-warning" role="alert" aria-live="polite">
       <AlertTriangle :size="14" class="shrink-0" aria-hidden="true" />

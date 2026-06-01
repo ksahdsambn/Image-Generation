@@ -1,5 +1,15 @@
 # 修复记录
 
+## 2026-06-01 参考图可选标记
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 按用户要求仅调整参考图区标题文案，明确参考图不是必填项；未修改上传逻辑、URL 输入逻辑、参数校验、请求构建、store、service、types 或数据结构。
+- 修改内容:
+  - `src/components/ReferenceImages.vue`: 将标题从 `参考图` 改为 `参考图 (可选)`，与现有 `遮罩图 (可选)` 标题格式保持一致。
+- 验证:
+  - `npm test -- src/__tests__/components/ReferenceImages.test.ts`: 1 file / 19 tests passed。
+  - 内置浏览器检查 `http://127.0.0.1:5173/`: `参考图 (可选)` 与 `遮罩图 (可选)` 均可见。
+
 ## 2026-06-01 多数量生成拆分为单图请求
 - 操作模型ID: GPT-5 Codex
 - 范围: 保持 `/v1/images/generations` 与 `/v1/images/edits` 现有调用方式，不迁移 `/v1/responses`，仅调整前端请求构建、生成 store 流程、结果 loading 进度展示和相关测试；未修改 Sub2API 后端、API Key 管理、下载/复制/删除结果或历史清理功能。
