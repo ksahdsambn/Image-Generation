@@ -57,7 +57,7 @@ async function handleGenerate() {
           <button
             @click="handleGenerate()"
             :disabled="!canGenerate"
-            class="studio-primary-button w-full min-h-11 py-2.5 px-4 rounded-lg font-semibold text-white transition-all flex items-center justify-center gap-2"
+            class="studio-primary-button w-full min-h-11 py-2.5 px-4 rounded-lg font-semibold text-white flex items-center justify-center gap-2"
             :class="[
               generationStore.isGenerating
                 ? 'bg-[#d95c35] text-white cursor-progress border-[#d95c35]'

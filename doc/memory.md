@@ -1,5 +1,21 @@
 # 修复记录
 
+## 2026-06-01 UI 体验与表现性能优化
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `optimize` skill 对当前 Vue/Tailwind 前端仅做 UI 层面的加载体验、渲染效率、视觉反馈、动画性能、图片展示稳定性和交互流畅度优化；未修改生成逻辑、API 请求逻辑、上传逻辑、历史逻辑、密钥逻辑、store、service、types、数据结构、核心功能、三栏布局分配、移动端堆叠顺序或页面信息架构。
+- 修改内容:
+  - `src/style.css`: 降低全局阴影 token、顶栏 blur、卡片/结果区/按钮/弹窗/hover 状态的重阴影强度，保留现有视觉风格但减少重绘成本；为卡片、结果项、历史项和参考图预览增加 `contain: paint`，缩小重绘影响范围。
+  - `src/style.css`: 将生成按钮从 Tailwind `transition-all` 改为受控的颜色、背景、边框、阴影、transform、opacity 过渡；继续使用 transform/opacity 类低成本动效，保持 `prefers-reduced-motion` 降级规则。
+  - `src/style.css`: 优化输入 focus、上传区、空状态、加载态、结果卡片、历史项和移动端背景层的视觉反馈，让状态变化更轻、更稳；修正 320px 窄视口下 `body min-width` 与滚动条占宽导致的根元素横向溢出。
+  - `src/components/ResultGrid.vue`、`src/components/ReferenceImages.vue`、`src/components/MaskImageInput.vue`、`src/components/HistoryPanel.vue`: 为结果图、参考图、遮罩图、历史缩略图补充稳定尺寸、`decoding="async"` 和必要的 `loading="lazy"`，减少图片加载前后的视觉跳动。
+- 验证:
+  - 基线构建: `npm.cmd run build` passed，CSS 68.85 kB / gzip 12.46 kB，JS 231.14 kB / gzip 78.87 kB。
+  - 最终构建: `npm.cmd run build` passed，CSS 69.16 kB / gzip 12.52 kB，JS 231.35 kB / gzip 78.93 kB。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - 内置浏览器响应式检查: 注入长 Prompt 和长 URL 后，`1440x900`、`768x1024`、`375x812`、`320x780` 的 document/body horizontal overflow 均为 0，visible overflow offenders 均为空。
+  - 浏览器截图核对: `test-results/optimize-desktop-1440.png`、`test-results/optimize-mobile-375.png` 已生成，桌面三栏与移动端堆叠顺序保持不变，未发现文字遮挡、重叠或横向滚动。
+
 ## 2026-06-01 UI 风格大胆化增强
 - 操作模型ID: GPT-5 Codex
 - 范围: 使用 `bolder` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端仅做视觉表现、装饰层、颜色层级、阴影、边框、背景、按钮、卡片和交互状态增强；未修改生成流程、API 请求、历史写入、上传、密钥管理、store、service、types、数据结构、核心功能或桌面三栏/移动顺序。

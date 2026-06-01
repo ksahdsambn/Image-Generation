@@ -95,7 +95,15 @@ function removeUrl(index: number) {
         :key="index"
         class="relative group w-16 h-16 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 shadow-sm"
       >
-        <img :src="img.previewUrl" :alt="'参考图预览 ' + (index + 1)" class="w-full h-full object-cover" />
+        <img
+          :src="img.previewUrl"
+          :alt="'参考图预览 ' + (index + 1)"
+          width="64"
+          height="64"
+          decoding="async"
+          loading="lazy"
+          class="w-full h-full object-cover"
+        />
         <button
           @click="removeImage(index)"
           class="absolute top-0.5 right-0.5 flex h-11 w-11 items-center justify-center rounded-full bg-stone-950/70 text-white opacity-100 transition-opacity lg:h-7 lg:w-7 lg:opacity-0 lg:group-hover:opacity-100"

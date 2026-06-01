@@ -57,7 +57,14 @@ function clearMask() {
 
     <div v-if="store.maskImage" class="flex min-w-0 items-center gap-2 p-2 rounded-lg border border-stone-200 bg-stone-50/90" data-testid="mask-preview">
       <template v-if="store.maskImage.previewUrl">
-        <img :src="store.maskImage.previewUrl" alt="遮罩图预览" class="w-10 h-10 object-cover rounded-md border border-stone-200" />
+        <img
+          :src="store.maskImage.previewUrl"
+          alt="遮罩图预览"
+          width="40"
+          height="40"
+          decoding="async"
+          class="w-10 h-10 object-cover rounded-md border border-stone-200"
+        />
       </template>
       <template v-else-if="store.maskImage.url">
         <span class="min-w-0 flex-1 truncate text-xs text-stone-600" :title="store.maskImage.url">{{ store.maskImage.url }}</span>

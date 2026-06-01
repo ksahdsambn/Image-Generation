@@ -99,6 +99,10 @@ function downloadAll() {
           <img
             :src="result.objectUrl"
             :alt="'生成结果 ' + (index + 1)"
+            width="1024"
+            height="1024"
+            decoding="async"
+            loading="lazy"
             class="w-full aspect-square object-contain bg-[linear-gradient(135deg,#f7f1e7,#edf4f1)]"
           />
           <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-stone-950/72 to-transparent p-2 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">

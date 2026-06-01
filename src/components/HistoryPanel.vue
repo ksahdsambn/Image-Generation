@@ -289,7 +289,15 @@ onBeforeUnmount(() => {
             :aria-label="'预览历史图片：' + record.prompt"
             data-testid="history-thumbnail"
           >
-            <img :src="getThumbnailUrl(record)" alt="" class="w-full h-full object-cover" />
+            <img
+              :src="getThumbnailUrl(record)"
+              alt=""
+              width="48"
+              height="48"
+              decoding="async"
+              loading="lazy"
+              class="w-full h-full object-cover"
+            />
           </div>
           <div class="flex-1 min-w-0">
             <p class="text-xs font-medium text-stone-700 truncate" :title="record.prompt">{{ record.prompt }}</p>
@@ -359,6 +367,7 @@ onBeforeUnmount(() => {
           <img
             :src="fullImageUrl"
             alt="历史图片"
+            decoding="async"
             class="max-w-full max-h-[80vh] object-contain"
           />
           <div class="absolute top-2 right-2 flex gap-1">
