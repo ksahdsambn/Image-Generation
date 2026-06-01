@@ -455,7 +455,9 @@
   .reference-images button:focus-visible,
   .mask-image-input button:focus-visible,
   .result-grid button:focus-visible,
-  .history-panel button:focus-visible {
+  .history-panel button:focus-visible,
+  .history-panel [data-testid="history-item"]:focus-visible,
+  .history-panel [data-testid="history-thumbnail"]:focus-visible {
     outline: 2px solid rgb(18 126 115 / 0.76);
     outline-offset: 2px;
     box-shadow: 0 0 0 4px rgb(18 126 115 / 0.12);
@@ -597,6 +599,10 @@
     animation: studio-fade-rise 180ms var(--studio-ease-out) both;
   }
 
+  .history-panel [data-testid="history-thumbnail"] {
+    touch-action: manipulation;
+  }
+
   .history-panel [data-testid="history-item"]:focus-within {
     border-color: rgb(18 126 115 / 0.46);
     box-shadow:
@@ -679,6 +685,37 @@
       max-height: none;
       overflow-y: visible;
       padding-right: 0;
+    }
+
+    .generation-form textarea,
+    .generation-form input:not([type="checkbox"]):not([type="file"]),
+    .generation-form select,
+    .api-key-area input:not([type="checkbox"]),
+    .reference-images input:not([type="file"]),
+    .mask-image-input input:not([type="file"]),
+    .history-panel input {
+      min-height: 44px;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .generation-form button,
+    .api-key-area button,
+    .reference-images button,
+    .mask-image-input button,
+    .result-grid button,
+    .history-panel button,
+    .history-panel [data-testid="history-thumbnail"],
+    .api-key-area label,
+    .generation-form textarea,
+    .generation-form input:not([type="checkbox"]):not([type="file"]),
+    .generation-form select,
+    .api-key-area input:not([type="checkbox"]),
+    .reference-images input:not([type="file"]),
+    .mask-image-input input:not([type="file"]),
+    .history-panel input {
+      min-width: 46px !important;
+      min-height: 46px !important;
     }
   }
 

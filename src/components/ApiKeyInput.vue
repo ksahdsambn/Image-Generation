@@ -33,23 +33,23 @@ async function handleTestConnection() {
         <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           <button
             @click="apiKeyStore.toggleVisible()"
-            class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800 lg:h-7 lg:w-7"
+            class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-600 hover:text-stone-900 lg:h-7 lg:w-7"
             :aria-label="apiKeyStore.visible ? '隐藏密钥' : '显示密钥'"
             data-testid="toggle-visible-btn"
             type="button"
           >
-            <EyeOff v-if="apiKeyStore.visible" :size="14" />
-            <Eye v-else :size="14" />
+            <EyeOff v-if="apiKeyStore.visible" :size="14" aria-hidden="true" />
+            <Eye v-else :size="14" aria-hidden="true" />
           </button>
           <button
             v-if="apiKeyStore.hasKey"
             @click="apiKeyStore.clearApiKey(); connectionStore.reset()"
-            class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-500 hover:text-stone-800 lg:h-7 lg:w-7"
+            class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-600 hover:text-stone-900 lg:h-7 lg:w-7"
             aria-label="清除密钥"
             data-testid="clear-key-btn"
             type="button"
           >
-            <XIcon :size="14" />
+            <XIcon :size="14" aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -62,33 +62,35 @@ async function handleTestConnection() {
         data-testid="test-connection-btn"
         type="button"
       >
-        <Loader2 v-if="connectionStore.status === 'testing'" :size="14" class="animate-spin text-teal-700" />
-        <CheckCircle2 v-else-if="connectionStore.status === 'connected'" :size="14" class="text-green-500" />
-        <WifiOff v-else-if="connectionStore.status === 'error'" :size="14" class="text-red-500" />
-        <Wifi v-else :size="14" class="text-gray-500" />
+        <Loader2 v-if="connectionStore.status === 'testing'" :size="14" class="animate-spin text-teal-700" aria-hidden="true" />
+        <CheckCircle2 v-else-if="connectionStore.status === 'connected'" :size="14" class="text-green-700" aria-hidden="true" />
+        <WifiOff v-else-if="connectionStore.status === 'error'" :size="14" class="text-red-700" aria-hidden="true" />
+        <Wifi v-else :size="14" class="text-stone-600" aria-hidden="true" />
       </button>
     </div>
-    <div v-if="connectionStore.status === 'connected'" class="mt-2 rounded-md border border-green-200 bg-green-50/90 px-2 py-1 text-xs font-medium text-green-700 break-words" data-testid="connection-ok">
+    <div v-if="connectionStore.status === 'connected'" class="mt-2 rounded-md border border-green-200 bg-green-50/90 px-2 py-1 text-xs font-medium text-green-800 break-words" data-testid="connection-ok" role="status" aria-live="polite">
       连接正常
     </div>
-    <div v-if="connectionStore.status === 'error' && connectionStore.error" class="mt-2 rounded-md border border-red-200 bg-red-50/90 px-2 py-1 text-xs font-medium text-red-700 break-words" data-testid="connection-error">
+    <div v-if="connectionStore.status === 'error' && connectionStore.error" class="mt-2 rounded-md border border-red-200 bg-red-50/90 px-2 py-1 text-xs font-medium text-red-700 break-words" data-testid="connection-error" role="alert" aria-live="assertive">
       {{ connectionStore.error.userMessage }}
     </div>
     <div v-if="rememberEnabled" class="mt-2 flex flex-wrap items-center gap-2">
-      <label class="flex min-w-0 items-center gap-1.5 text-xs font-medium text-stone-500 cursor-pointer">
+      <label class="flex min-h-11 min-w-0 items-center gap-1.5 text-xs font-medium text-stone-600 cursor-pointer lg:min-h-8">
         <input
           type="checkbox"
           :checked="apiKeyStore.rememberKey"
           @change="apiKeyStore.setRememberKey(($event.target as HTMLInputElement).checked)"
-          class="h-4 w-4 rounded border-stone-300 text-teal-700 focus:ring-teal-700"
+          class="h-5 w-5 rounded border-stone-300 text-teal-700 focus:ring-teal-700"
           data-testid="remember-key-checkbox"
         />
         记住密钥
       </label>
       <span
         v-if="apiKeyStore.rememberKey"
-        class="min-w-0 text-xs font-medium text-amber-700 break-words"
+        class="min-w-0 text-xs font-medium text-amber-800 break-words"
         data-testid="remember-risk-hint"
+        role="status"
+        aria-live="polite"
       >
         密钥将保存到浏览器本地，请确保设备安全
       </span>

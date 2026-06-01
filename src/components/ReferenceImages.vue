@@ -56,12 +56,12 @@ function removeUrl(index: number) {
   <div class="reference-images min-w-0 space-y-3.5" data-testid="reference-images" aria-label="参考图和网页图片">
     <h3 class="text-sm font-semibold text-stone-700">参考图</h3>
 
-    <div v-if="store.hasMixedRefSources" class="flex min-w-0 items-center gap-2 p-2 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-800 text-xs" data-testid="mix-conflict-warning">
-      <AlertTriangle :size="14" class="shrink-0" />
+    <div v-if="store.hasMixedRefSources" class="flex min-w-0 items-center gap-2 p-2 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-800 text-xs" data-testid="mix-conflict-warning" role="alert" aria-live="polite">
+      <AlertTriangle :size="14" class="shrink-0" aria-hidden="true" />
       <span class="min-w-0 break-words">不能同时使用本地上传和网页图片 URL，请选择其中一种</span>
     </div>
 
-    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs break-words" data-testid="validation-error">
+    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs break-words" data-testid="validation-error" role="alert" aria-live="assertive">
       {{ validationError.userMessage }}
     </div>
 
@@ -74,16 +74,17 @@ function removeUrl(index: number) {
         class="hidden"
         @change="handleFileSelect"
         data-testid="file-input"
+        aria-label="选择本地参考图文件"
       />
       <button
         @click="fileInputRef?.click()"
         :disabled="store.hasWebImageUrls"
-        class="w-full flex min-h-11 items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-dashed border-stone-300 text-sm font-medium text-stone-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        class="w-full flex min-h-11 items-center justify-center gap-2 py-2.5 rounded-lg border-2 border-dashed border-stone-300 text-sm font-medium text-stone-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         type="button"
         data-testid="upload-btn"
         aria-label="上传本地参考图"
       >
-        <Upload :size="16" />
+        <Upload :size="16" aria-hidden="true" />
         上传参考图
       </button>
     </div>
@@ -94,20 +95,20 @@ function removeUrl(index: number) {
         :key="index"
         class="relative group w-16 h-16 rounded-lg overflow-hidden border border-stone-200 bg-stone-100 shadow-sm"
       >
-        <img :src="img.previewUrl" alt="参考图预览" class="w-full h-full object-cover" />
+        <img :src="img.previewUrl" :alt="'参考图预览 ' + (index + 1)" class="w-full h-full object-cover" />
         <button
           @click="removeImage(index)"
-          class="absolute top-0.5 right-0.5 flex h-11 w-11 items-center justify-center rounded-full bg-stone-950/70 text-white opacity-100 transition-opacity lg:h-5 lg:w-5 lg:opacity-0 lg:group-hover:opacity-100"
+          class="absolute top-0.5 right-0.5 flex h-11 w-11 items-center justify-center rounded-full bg-stone-950/70 text-white opacity-100 transition-opacity lg:h-7 lg:w-7 lg:opacity-0 lg:group-hover:opacity-100"
           type="button"
           :aria-label="'移除参考图 ' + (index + 1)"
         >
-          <XIcon :size="10" />
+          <XIcon :size="12" aria-hidden="true" />
         </button>
       </div>
     </div>
 
     <div class="border-t border-stone-200/80 pt-3">
-      <p class="text-xs font-medium text-stone-500 mb-2">或使用网页图片 URL</p>
+      <p class="text-xs font-medium text-stone-600 mb-2">或使用网页图片 URL</p>
       <div class="flex min-w-0 gap-1.5">
         <input
           v-model="urlInput"
@@ -116,6 +117,7 @@ function removeUrl(index: number) {
           :disabled="store.hasLocalImages"
           class="flex-1 min-w-0 rounded-lg border border-stone-300 px-2.5 py-2 text-xs focus:outline-none focus:ring-0 disabled:opacity-50 shadow-sm"
           data-testid="url-input"
+          aria-label="网页图片 URL"
           @keydown.enter.prevent="addUrl"
         />
         <button
@@ -126,7 +128,7 @@ function removeUrl(index: number) {
           data-testid="add-url-btn"
           aria-label="添加图片 URL"
         >
-          <Plus :size="14" />
+          <Plus :size="14" aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -137,15 +139,15 @@ function removeUrl(index: number) {
         :key="index"
         class="flex min-w-0 items-center gap-1.5 text-xs text-stone-600 bg-stone-50/90 rounded-lg border border-stone-200 px-2 py-1.5"
       >
-        <Link :size="10" class="shrink-0 text-teal-700" />
-        <span class="truncate flex-1 min-w-0">{{ item.url }}</span>
+        <Link :size="10" class="shrink-0 text-teal-700" aria-hidden="true" />
+        <span class="truncate flex-1 min-w-0" :title="item.url">{{ item.url }}</span>
         <button
           @click="removeUrl(index)"
-          class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0 lg:h-6 lg:w-6"
+          class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200 text-stone-600 hover:text-stone-800 shrink-0 lg:h-7 lg:w-7"
           type="button"
           :aria-label="'移除 URL ' + (index + 1)"
         >
-          <XIcon :size="10" />
+          <XIcon :size="12" aria-hidden="true" />
         </button>
       </div>
     </div>

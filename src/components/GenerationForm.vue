@@ -24,7 +24,7 @@ const qualityLabels: Record<string, string> = {
   <div class="generation-form min-w-0 space-y-4" data-testid="generation-form" aria-label="生成参数表单">
     <div>
       <label for="prompt-input" class="block text-sm font-semibold text-stone-700 mb-1.5">
-        Prompt <span class="text-red-500">*</span>
+        Prompt <span class="text-red-700">*</span>
       </label>
       <textarea
         id="prompt-input"
@@ -138,12 +138,12 @@ const qualityLabels: Record<string, string> = {
     <div class="pt-1.5">
       <button
         @click="store.resetParams()"
-        class="flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-stone-500 hover:bg-stone-100 hover:text-stone-800 lg:min-h-8"
+        class="flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 lg:min-h-8"
         type="button"
         data-testid="reset-params-btn"
         aria-label="重置参数"
       >
-        <RotateCcw :size="12" />
+        <RotateCcw :size="12" aria-hidden="true" />
         重置参数
       </button>
     </div>

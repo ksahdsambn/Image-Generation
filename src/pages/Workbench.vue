@@ -35,8 +35,8 @@ async function handleGenerate() {
     <header v-else class="studio-topbar sticky top-0 z-20 border-b px-4 py-4">
       <div class="max-w-7xl mx-auto flex min-w-0 items-center justify-between gap-4">
         <h1 class="studio-title min-w-0 flex-1 truncate text-lg sm:flex-none sm:text-xl font-semibold">{{ config.appTitle }}</h1>
-        <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-stone-500">
-          <span class="h-2 w-2 rounded-full bg-teal-600 shadow-[0_0_0_4px_rgb(18_126_115_/_0.12)]"></span>
+        <div class="hidden sm:flex items-center gap-2 text-xs font-medium text-stone-600">
+          <span class="h-2 w-2 rounded-full bg-teal-600 shadow-[0_0_0_4px_rgb(18_126_115_/_0.12)]" aria-hidden="true"></span>
           GPT Image Studio
         </div>
       </div>
@@ -63,14 +63,14 @@ async function handleGenerate() {
                 ? 'bg-[#d95c35] text-white cursor-progress border-[#d95c35]'
                 : canGenerate
                   ? 'bg-[#d95c35] hover:bg-[#c84f2d]'
-                  : 'bg-stone-300 text-stone-500 cursor-not-allowed border-stone-300',
+                  : 'bg-stone-300 text-stone-600 cursor-not-allowed border-stone-300',
               generationStore.isGenerating ? 'is-generating' : '',
             ]"
             data-testid="generate-btn"
             :aria-label="generationStore.isGenerating ? '正在生成' : '生成图片'"
           >
-            <Loader2 v-if="generationStore.isGenerating" :size="18" class="animate-spin" />
-            <Sparkles v-else :size="18" />
+            <Loader2 v-if="generationStore.isGenerating" :size="18" class="animate-spin" aria-hidden="true" />
+            <Sparkles v-else :size="18" aria-hidden="true" />
             {{ generationStore.isGenerating ? '生成中...' : '生成图片' }}
           </button>
         </section>

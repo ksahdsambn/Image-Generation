@@ -44,31 +44,31 @@ function downloadAll() {
 
 <template>
   <div class="result-grid" data-testid="result-grid" aria-label="生成结果">
-    <div v-if="generationStore.error" class="p-3 rounded-lg border border-red-200 bg-red-50/95 text-red-700 text-sm shadow-sm" data-testid="error-state">
+    <div v-if="generationStore.error" class="p-3 rounded-lg border border-red-200 bg-red-50/95 text-red-700 text-sm shadow-sm" data-testid="error-state" role="alert" aria-live="assertive">
       <div class="flex min-w-0 items-start gap-2">
-        <AlertCircle :size="16" class="shrink-0 mt-0.5" />
+        <AlertCircle :size="16" class="shrink-0 mt-0.5" aria-hidden="true" />
         <span class="min-w-0 break-words">{{ generationStore.error.userMessage }}</span>
       </div>
     </div>
 
-    <div v-if="generationStore.storageWarning" class="p-3 rounded-lg border border-amber-200 bg-amber-50/95 text-amber-800 text-sm mb-3 shadow-sm" data-testid="storage-warning">
+    <div v-if="generationStore.storageWarning" class="p-3 rounded-lg border border-amber-200 bg-amber-50/95 text-amber-800 text-sm mb-3 shadow-sm" data-testid="storage-warning" role="alert" aria-live="polite">
       <div class="flex min-w-0 items-start gap-2">
-        <AlertCircle :size="16" class="shrink-0 mt-0.5" />
+        <AlertCircle :size="16" class="shrink-0 mt-0.5" aria-hidden="true" />
         <span class="min-w-0 break-words">{{ generationStore.storageWarning.userMessage }}</span>
       </div>
     </div>
 
-    <div v-else-if="generationStore.isGenerating" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-500" data-testid="loading-state">
-      <div class="w-9 h-9 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mb-3 shadow-[0_0_24px_rgb(18_126_115_/_0.18)]"></div>
+    <div v-else-if="generationStore.isGenerating" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-600" data-testid="loading-state" role="status" aria-live="polite" aria-busy="true">
+      <div class="w-9 h-9 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mb-3 shadow-[0_0_24px_rgb(18_126_115_/_0.18)]" aria-hidden="true"></div>
       <p class="px-3 text-center text-sm font-medium">图片生成中，请稍候...</p>
     </div>
 
-    <div v-else-if="!generationStore.hasResults" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-500" data-testid="empty-state">
+    <div v-else-if="!generationStore.hasResults" class="flex min-h-[300px] flex-col items-center justify-center py-12 text-stone-600" data-testid="empty-state">
       <div class="mb-3 rounded-lg border border-stone-200 bg-stone-50/90 p-3 shadow-sm">
-        <ImageIcon :size="32" class="text-teal-700" />
+        <ImageIcon :size="32" class="text-teal-700" aria-hidden="true" />
       </div>
       <p class="px-3 text-center text-sm font-semibold text-stone-700">暂无生成结果</p>
-      <p class="mt-1 px-3 text-center text-xs text-stone-500">输入 Prompt 并点击生成按钮开始</p>
+      <p class="mt-1 px-3 text-center text-xs text-stone-600">输入 Prompt 并点击生成按钮开始</p>
     </div>
 
     <template v-else>
@@ -84,7 +84,7 @@ function downloadAll() {
             data-testid="download-all-btn"
             aria-label="下载全部结果"
           >
-            <DownloadCloud :size="14" />
+            <DownloadCloud :size="14" aria-hidden="true" />
             下载全部
           </button>
         </div>
@@ -105,34 +105,34 @@ function downloadAll() {
             <div class="flex items-center justify-center sm:justify-end gap-1">
               <button
                 @click="downloadImage(index)"
-                class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
                 type="button"
                 :aria-label="'下载结果 ' + (index + 1)"
                 data-testid="download-result-btn"
               >
-                <Download :size="14" />
+                <Download :size="14" aria-hidden="true" />
               </button>
               <button
                 @click="copyImage(index)"
-                class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
                 type="button"
                 :aria-label="'复制结果 ' + (index + 1)"
                 data-testid="copy-result-btn"
               >
-                <Copy :size="14" />
+                <Copy :size="14" aria-hidden="true" />
               </button>
               <button
                 @click="generationStore.removeResult(index)"
-                class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
+                class="flex h-12 w-12 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-8 lg:w-8"
                 type="button"
                 :aria-label="'移除结果 ' + (index + 1)"
                 data-testid="remove-result-btn"
               >
-                <XIcon :size="14" />
+                <XIcon :size="14" aria-hidden="true" />
               </button>
             </div>
           </div>
-          <p v-if="result.revisedPrompt" class="border-t border-stone-100 px-2.5 py-1.5 text-xs text-stone-500 truncate" :title="result.revisedPrompt">
+          <p v-if="result.revisedPrompt" class="border-t border-stone-100 px-2.5 py-1.5 text-xs text-stone-600 truncate" :title="result.revisedPrompt">
             {{ result.revisedPrompt }}
           </p>
         </div>

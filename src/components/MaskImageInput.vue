@@ -51,7 +51,7 @@ function clearMask() {
   <div class="mask-image-input min-w-0 space-y-3" data-testid="mask-image-input" aria-label="遮罩图">
     <h3 class="text-sm font-semibold text-stone-700">遮罩图 (可选)</h3>
 
-    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs break-words" data-testid="mask-validation-error">
+    <div v-if="validationError" class="p-2 rounded-lg border border-red-200 bg-red-50/90 text-red-700 text-xs break-words" data-testid="mask-validation-error" role="alert" aria-live="assertive">
       {{ validationError.userMessage }}
     </div>
 
@@ -60,16 +60,16 @@ function clearMask() {
         <img :src="store.maskImage.previewUrl" alt="遮罩图预览" class="w-10 h-10 object-cover rounded-md border border-stone-200" />
       </template>
       <template v-else-if="store.maskImage.url">
-        <span class="min-w-0 flex-1 truncate text-xs text-stone-600">{{ store.maskImage.url }}</span>
+        <span class="min-w-0 flex-1 truncate text-xs text-stone-600" :title="store.maskImage.url">{{ store.maskImage.url }}</span>
       </template>
       <button
         @click="clearMask()"
-        class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200 text-stone-400 hover:text-stone-700 shrink-0 lg:h-7 lg:w-7"
+        class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200 text-stone-600 hover:text-stone-800 shrink-0 lg:h-7 lg:w-7"
         type="button"
         aria-label="移除遮罩图"
         data-testid="clear-mask-btn"
       >
-        <XIcon :size="14" />
+        <XIcon :size="14" aria-hidden="true" />
       </button>
     </div>
 
@@ -81,6 +81,7 @@ function clearMask() {
         class="hidden"
         @change="handleFileSelect"
         data-testid="mask-file-input"
+        aria-label="选择遮罩图文件"
       />
       <div class="flex flex-col sm:flex-row gap-2">
         <button
@@ -90,7 +91,7 @@ function clearMask() {
           data-testid="upload-mask-btn"
           aria-label="上传遮罩图"
         >
-          <Upload :size="12" />
+          <Upload :size="12" aria-hidden="true" />
           上传
         </button>
         <div class="flex min-w-0 flex-1 gap-1.5">
@@ -100,6 +101,7 @@ function clearMask() {
             placeholder="或输入 URL"
             class="flex-1 min-w-0 rounded-lg border border-stone-300 px-2.5 py-2 text-xs focus:outline-none focus:ring-0 shadow-sm"
             data-testid="mask-url-input"
+            aria-label="遮罩图 URL"
             @keydown.enter.prevent="setMaskUrl()"
           />
           <button
@@ -108,6 +110,7 @@ function clearMask() {
             class="min-h-11 min-w-12 px-2.5 py-2 rounded-lg border border-stone-300 bg-white/80 text-xs font-medium text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm lg:min-h-10"
             type="button"
             data-testid="set-mask-url-btn"
+            aria-label="设置遮罩图 URL"
           >
             确定
           </button>

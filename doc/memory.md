@@ -1,5 +1,23 @@
 # 修复记录
 
+## 2026-06-01 UI 质量审查与可访问性修复
+
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `audit` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端 UI 做可访问性、响应式、视觉一致性、状态反馈、动效降级和长文本健壮性审查与修复；未修改生成逻辑、上传逻辑、历史写入/读取逻辑、密钥逻辑、API 请求逻辑、store、service、types、数据结构或页面主要区域分配。
+- 修复内容:
+  - `src/components/HistoryPanel.vue`: 为历史记录项和缩略图预览补充键盘访问、焦点入口、ARIA 语义和选中状态；为日期筛选、搜索输入、加载/警告状态、大图弹窗补充可访问名称、live region 和 `dialog` 语义；提升历史辅助文本和图标按钮对比度，并在长历史文本下保持截断防溢出。
+  - `src/components/ReferenceImages.vue`、`src/components/MaskImageInput.vue`: 为 URL 输入、隐藏文件输入、错误/警告状态和长 URL 展示补充可访问名称、alert/live 语义、hover title 与装饰图标隐藏；统一移除按钮尺寸和颜色对比。
+  - `src/components/ResultGrid.vue`: 为错误、警告、加载状态补充 `alert/status` 与 `aria-live`；扩大移动/平板结果操作按钮触控尺寸；提升空状态、结果 revised prompt 与按钮图标的可读性。
+  - `src/components/ApiKeyInput.vue`、`src/components/GenerationForm.vue`、`src/pages/Workbench.vue`: 提升密钥区、重置按钮和顶栏辅助文本对比度；补充装饰图标 `aria-hidden`；扩大记住密钥点击区域。
+  - `src/style.css`: 为历史记录可聚焦区域补充统一 `focus-visible` 样式；在移动/平板和粗指针设备下增加 44px 以上触控保护；继续保留 `prefers-reduced-motion` 动效降级。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - Playwright 响应式检查: 注入长 Prompt、长 URL、模拟结果和历史记录后，`320x780`、`390x844`、`768x1024`、`1440x900` 均无 document/body 横向溢出、无未命名输入、无小于 44px 的移动/平板有效点击目标；`1024x768` 粗指针模拟无横向溢出且无小于 44px 的有效点击目标。
+  - Playwright 可访问性检查: 历史记录项可键盘聚焦并带 `role/button` 与 `tabindex`；历史缩略图可键盘打开大图；大图弹窗带 `role=dialog`、`aria-modal=true` 和可访问名称。
+  - Playwright reduced motion 检查: `prefers-reduced-motion: reduce` 下页面仍无横向溢出，动画/过渡降级保持生效。
+
 ## 2026-06-01 UI 交互动效增强
 
 - 操作模型ID: GPT-5 Codex
