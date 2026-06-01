@@ -1,5 +1,20 @@
 # 修复记录
 
+## 2026-06-01 UI 风格大胆化增强
+- 操作模型ID: GPT-5 Codex
+- 范围: 使用 `bolder` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端仅做视觉表现、装饰层、颜色层级、阴影、边框、背景、按钮、卡片和交互状态增强；未修改生成流程、API 请求、历史写入、上传、密钥管理、store、service、types、数据结构、核心功能或桌面三栏/移动顺序。
+- 修改内容:
+  - `src/style.css`: 在现有浅色图像工作台风格上增强 OKLCH 视觉 token，补充更深的文字层级、热珊瑚、氧化赭色、酸性黄绿和更强卡片阴影，让色彩和层次更有识别度。
+  - `src/style.css`: 强化首屏背景肌理、顶栏底部识别轨、卡片顶部彩色轨和结果区专属画布质感，保留现有布局和组件层级。
+  - `src/style.css`: 强化主生成按钮的材质、边界、阴影、hover 扫光反馈和生成态基础视觉；增强输入框 focus、上传参考图区 checker 质感、结果空/加载态画布焦点、结果卡片顶部轨、历史项选中/hover 视觉层级。
+- 验证:
+  - `npm.cmd run build`: passed。
+  - `npm.cmd test -- --run`: 26 files / 434 tests passed。
+  - `npm.cmd run test:e2e`: 16 tests passed。
+  - Playwright CLI 桌面截图检查 `1440x900`: 首屏三栏布局分配保持不变，首屏视觉识别度、结果区和右侧历史层级更强。
+  - Playwright CLI 移动截图检查 `375x812`: 现有移动端顺序保持不变，未发现文字遮挡或横向滚动。
+  - Playwright 长内容响应式检查: 注入长 Prompt、长网页图片 URL、模拟生成结果和历史项后，`320x780`、`375x812`、`768x1024`、`1440x900` 的 document/body horizontal overflow 均为 0，visible overflow offenders 均为空。
+
 ## 2026-06-01 UI 配色层次增强
 - 操作模型ID: GPT-5 Codex
 - 范围: 使用 `colorize` skill，并按其要求参考 `frontend-design` 原则，对当前 Vue/Tailwind 前端 UI 仅做颜色系统、状态色、层次色、背景色、按钮色、边框色和强调色增强；未修改生成逻辑、上传逻辑、历史逻辑、密钥逻辑、API 请求逻辑、store、service、types、数据结构、核心功能入口或页面主要布局分配。

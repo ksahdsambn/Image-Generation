@@ -3,6 +3,7 @@
 @layer base {
   :root {
     color-scheme: light;
+    --studio-ink-deep: oklch(16% 0.045 62);
     --studio-ink: oklch(21% 0.035 64);
     --studio-ink-soft: oklch(31% 0.038 68);
     --studio-muted: oklch(46% 0.035 72);
@@ -20,11 +21,14 @@
     --studio-teal-soft: oklch(92.5% 0.042 178);
     --studio-teal-line: oklch(62% 0.115 184 / 0.34);
     --studio-coral: oklch(60% 0.158 38);
+    --studio-coral-hot: oklch(66% 0.18 39);
     --studio-coral-strong: oklch(49% 0.148 35);
     --studio-coral-soft: oklch(92.5% 0.054 46);
+    --studio-oxide: oklch(42% 0.1 34);
     --studio-amber: oklch(69% 0.13 72);
     --studio-amber-strong: oklch(43% 0.09 67);
     --studio-amber-soft: oklch(93% 0.064 83);
+    --studio-acid: oklch(78% 0.14 104);
     --studio-success: oklch(47% 0.12 151);
     --studio-success-strong: oklch(35% 0.095 151);
     --studio-success-soft: oklch(92% 0.05 150);
@@ -37,6 +41,7 @@
     --studio-overlay: oklch(21% 0.035 64 / 0.76);
     --studio-shadow-sm: 0 1px 0 oklch(100% 0 0 / 0.72) inset, 0 8px 22px oklch(34% 0.06 62 / 0.10);
     --studio-shadow-md: 0 1px 0 oklch(100% 0 0 / 0.68) inset, 0 18px 42px oklch(34% 0.06 62 / 0.12);
+    --studio-shadow-lg: 0 1px 0 oklch(100% 0 0 / 0.72) inset, 0 26px 70px oklch(30% 0.072 62 / 0.18);
     --studio-shadow-color: oklch(34% 0.06 62 / 0.13);
     --studio-motion-fast: 120ms;
     --studio-motion-base: 180ms;
@@ -74,10 +79,10 @@
     margin: 0;
     color: var(--studio-ink);
     background:
-      radial-gradient(circle at 10% 7%, oklch(75% 0.15 38 / 0.22), transparent 30rem),
-      radial-gradient(circle at 88% 16%, oklch(66% 0.12 184 / 0.28), transparent 28rem),
-      radial-gradient(circle at 58% 100%, oklch(72% 0.09 210 / 0.18), transparent 34rem),
-      linear-gradient(135deg, oklch(96% 0.023 96) 0%, var(--studio-bg-deep) 52%, oklch(93.5% 0.026 205) 100%);
+      radial-gradient(circle at 8% 7%, oklch(73% 0.16 38 / 0.28), transparent 31rem),
+      radial-gradient(circle at 87% 13%, oklch(61% 0.13 184 / 0.34), transparent 30rem),
+      radial-gradient(circle at 58% 100%, oklch(72% 0.11 210 / 0.22), transparent 36rem),
+      linear-gradient(135deg, oklch(96% 0.026 92) 0%, var(--studio-bg-deep) 48%, oklch(92.5% 0.032 198) 100%);
   }
 
   button,
@@ -318,9 +323,15 @@
     overflow-x: hidden;
     min-height: 100dvh;
     background:
-      linear-gradient(oklch(33% 0.04 118 / 0.062) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(33% 0.04 118 / 0.045) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(120deg, transparent 0 42%, oklch(99% 0.012 78 / 0.32) 42% 43%, transparent 43%),
+      linear-gradient(oklch(28% 0.05 118 / 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(28% 0.05 118 / 0.065) 1px, transparent 1px),
+      radial-gradient(circle at 50% 18%, oklch(99% 0.012 82 / 0.42), transparent 28rem);
+    background-size:
+      100% 100%,
+      44px 44px,
+      44px 44px,
+      100% 100%;
   }
 
   .studio-shell::before {
@@ -330,28 +341,62 @@
     pointer-events: none;
     content: "";
     background:
-      linear-gradient(110deg, transparent 0 42%, oklch(99% 0.012 80 / 0.52) 42% 43%, transparent 43%),
-      radial-gradient(circle at 72% 74%, oklch(54% 0.1 184 / 0.14), transparent 24rem),
-      radial-gradient(circle at 18% 68%, oklch(63% 0.12 38 / 0.1), transparent 20rem);
-    mask-image: linear-gradient(to bottom, black 0%, black 64%, transparent 100%);
+      linear-gradient(100deg, transparent 0 13%, oklch(58% 0.13 184 / 0.12) 13% 13.35%, transparent 13.35% 100%),
+      linear-gradient(108deg, transparent 0 42%, oklch(99% 0.012 80 / 0.62) 42% 43.15%, transparent 43.15%),
+      radial-gradient(circle at 74% 72%, oklch(51% 0.12 184 / 0.2), transparent 25rem),
+      radial-gradient(circle at 17% 63%, oklch(66% 0.16 38 / 0.14), transparent 20rem);
+    mask-image: linear-gradient(to bottom, black 0%, black 70%, transparent 100%);
+  }
+
+  .studio-shell::after {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(90deg, transparent 0 calc(100% - 18rem), oklch(37% 0.12 184 / 0.08) calc(100% - 18rem) calc(100% - 17.86rem), transparent calc(100% - 17.86rem)),
+      repeating-linear-gradient(90deg, transparent 0 15px, oklch(24% 0.045 64 / 0.035) 15px 16px),
+      repeating-linear-gradient(0deg, transparent 0 15px, oklch(24% 0.045 64 / 0.028) 15px 16px);
+    opacity: 0.8;
+    mask-image:
+      radial-gradient(circle at 80% 16%, black 0 24rem, transparent 38rem),
+      linear-gradient(to bottom, black 0%, transparent 78%);
   }
 
   .studio-topbar {
-    background: oklch(96.8% 0.019 96 / 0.86);
-    border-color: var(--studio-line);
+    overflow: hidden;
+    background:
+      linear-gradient(90deg, oklch(97% 0.026 82 / 0.94), oklch(96% 0.025 160 / 0.9)),
+      linear-gradient(180deg, oklch(100% 0 0 / 0.58), transparent);
+    border-color: oklch(37% 0.05 72 / 0.16);
     box-shadow:
-      0 1px 0 oklch(100% 0 0 / 0.62) inset,
-      0 18px 52px oklch(32% 0.055 62 / 0.10);
-    backdrop-filter: blur(18px) saturate(1.12);
+      0 1px 0 oklch(100% 0 0 / 0.76) inset,
+      0 18px 52px oklch(28% 0.07 62 / 0.14);
+    backdrop-filter: blur(20px) saturate(1.18);
     transition:
       background-color var(--studio-motion-slow) var(--studio-ease-out),
       box-shadow var(--studio-motion-slow) var(--studio-ease-out),
       border-color var(--studio-motion-slow) var(--studio-ease-out);
   }
 
+  .studio-topbar::before {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(90deg, var(--studio-coral-hot), var(--studio-acid) 36%, var(--studio-teal) 72%, transparent);
+    opacity: 0.78;
+  }
+
   .studio-title {
     letter-spacing: 0;
-    color: var(--studio-ink);
+    color: var(--studio-ink-deep);
+    text-shadow: 0 1px 0 oklch(100% 0 0 / 0.7);
   }
 
   .studio-topbar span[aria-hidden="true"] {
@@ -363,11 +408,11 @@
     position: relative;
     overflow: hidden;
     background:
-      linear-gradient(180deg, var(--studio-surface), var(--studio-surface-warm)),
-      linear-gradient(135deg, oklch(100% 0 0 / 0.55), oklch(100% 0 0 / 0));
-    border: 1px solid var(--studio-line);
+      linear-gradient(180deg, oklch(99% 0.012 82 / 0.96), var(--studio-surface-warm)),
+      linear-gradient(135deg, oklch(100% 0 0 / 0.62), oklch(100% 0 0 / 0));
+    border: 1px solid oklch(36% 0.05 70 / 0.2);
     border-radius: 8px;
-    box-shadow: var(--studio-shadow-md);
+    box-shadow: var(--studio-shadow-lg);
     animation: studio-fade-rise 320ms var(--studio-ease-out-strong) both;
     transition:
       border-color var(--studio-motion-base) var(--studio-ease-out),
@@ -381,15 +426,68 @@
     pointer-events: none;
     content: "";
     background:
-      linear-gradient(90deg, oklch(66% 0.15 38 / 0.22), transparent 28%),
-      linear-gradient(180deg, oklch(100% 0 0 / 0.5), transparent 9rem),
-      radial-gradient(circle at 88% 0%, oklch(68% 0.11 184 / 0.2), transparent 12rem);
-    opacity: 0.62;
+      linear-gradient(90deg, oklch(66% 0.16 38 / 0.28), transparent 28%),
+      linear-gradient(180deg, oklch(100% 0 0 / 0.56), transparent 9rem),
+      radial-gradient(circle at 88% 0%, oklch(62% 0.13 184 / 0.22), transparent 12rem);
+    opacity: 0.68;
     transition: opacity var(--studio-motion-slow) var(--studio-ease-out);
+  }
+
+  .studio-card::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 3px;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(90deg, var(--studio-coral-hot), var(--studio-amber) 38%, var(--studio-teal) 78%, transparent);
+    opacity: 0.74;
   }
 
   .studio-card > * {
     position: relative;
+  }
+
+  section[aria-label="生成配置"] > .studio-card:nth-of-type(1)::after {
+    background: linear-gradient(90deg, var(--studio-coral-hot), var(--studio-oxide) 50%, transparent);
+  }
+
+  section[aria-label="生成配置"] > .studio-card:nth-of-type(2)::after,
+  section[aria-label="生成配置"] > .studio-card:nth-of-type(3)::after {
+    background: linear-gradient(90deg, var(--studio-teal), var(--studio-acid) 52%, transparent);
+  }
+
+  section[aria-label="生成结果"] > .studio-card {
+    background:
+      radial-gradient(circle at 50% 46%, oklch(99% 0.012 82 / 0.9), transparent 19rem),
+      linear-gradient(135deg, oklch(98% 0.016 82 / 0.94), oklch(93.5% 0.034 166 / 0.78));
+    border-color: oklch(43% 0.07 184 / 0.26);
+    box-shadow:
+      0 1px 0 oklch(100% 0 0 / 0.74) inset,
+      0 30px 82px oklch(31% 0.08 74 / 0.18),
+      0 0 0 1px oklch(70% 0.13 184 / 0.08);
+  }
+
+  section[aria-label="生成结果"] > .studio-card::before {
+    background:
+      linear-gradient(90deg, oklch(64% 0.16 38 / 0.2), transparent 26%),
+      radial-gradient(circle at 50% 44%, oklch(77% 0.08 104 / 0.16), transparent 13rem),
+      radial-gradient(circle at 76% 16%, oklch(55% 0.14 184 / 0.2), transparent 15rem);
+    opacity: 0.88;
+  }
+
+  section[aria-label="生成结果"] > .studio-card::after {
+    background: linear-gradient(90deg, var(--studio-teal), var(--studio-acid) 46%, var(--studio-coral-hot) 82%, transparent);
+    opacity: 0.9;
+  }
+
+  [data-testid="right-rail"] > .studio-card:nth-of-type(1)::after {
+    background: linear-gradient(90deg, var(--studio-teal), var(--studio-info) 54%, transparent);
+  }
+
+  [data-testid="right-rail"] > .studio-card:nth-of-type(2)::after {
+    background: linear-gradient(90deg, var(--studio-amber), var(--studio-coral-hot) 42%, var(--studio-teal) 78%, transparent);
   }
 
   .studio-shell,
@@ -406,16 +504,35 @@
 
   .studio-primary-button {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
     min-height: 44px;
     color: var(--studio-on-action);
-    border: 1px solid oklch(38% 0.09 35 / 0.3);
+    border: 1px solid oklch(33% 0.11 35 / 0.48);
     background-image:
-      linear-gradient(180deg, oklch(67% 0.158 42), var(--studio-coral) 52%, var(--studio-coral-strong)),
-      radial-gradient(circle at 30% 0%, oklch(83% 0.11 72 / 0.34), transparent 52%);
+      linear-gradient(180deg, oklch(70% 0.18 42), var(--studio-coral) 48%, var(--studio-coral-strong)),
+      radial-gradient(circle at 24% -10%, oklch(84% 0.14 78 / 0.46), transparent 52%),
+      linear-gradient(90deg, oklch(40% 0.12 34 / 0.24), transparent);
     box-shadow:
-      0 12px 28px oklch(60% 0.158 38 / 0.32),
-      0 1px 0 oklch(100% 0 0 / 0.24) inset;
+      0 18px 38px oklch(57% 0.16 38 / 0.36),
+      0 0 0 1px oklch(100% 0 0 / 0.18) inset,
+      0 2px 0 oklch(100% 0 0 / 0.24) inset;
+    text-shadow: 0 1px 0 oklch(23% 0.08 34 / 0.28);
+  }
+
+  .studio-primary-button::before {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    background:
+      linear-gradient(105deg, transparent 0 36%, oklch(100% 0 0 / 0.32) 48%, transparent 62%),
+      repeating-linear-gradient(-45deg, transparent 0 10px, oklch(100% 0 0 / 0.055) 10px 11px);
+    opacity: 0.86;
+    transform: translateX(-10%);
+    transition:
+      opacity var(--studio-motion-base) var(--studio-ease-out),
+      transform var(--studio-motion-slow) var(--studio-ease-out-strong);
   }
 
   .studio-shell .studio-primary-button:not(:disabled),
@@ -430,11 +547,17 @@
   }
 
   .studio-primary-button:not(:disabled):hover {
-    transform: translateY(-1px);
+    transform: translateY(-2px);
     box-shadow:
-      0 18px 36px oklch(60% 0.158 38 / 0.38),
-      0 0 0 4px oklch(68% 0.16 42 / 0.12),
-      0 1px 0 oklch(100% 0 0 / 0.28) inset;
+      0 24px 46px oklch(57% 0.16 38 / 0.42),
+      0 0 0 4px oklch(68% 0.16 42 / 0.16),
+      0 0 0 1px oklch(100% 0 0 / 0.22) inset,
+      0 2px 0 oklch(100% 0 0 / 0.3) inset;
+  }
+
+  .studio-primary-button:not(:disabled):hover::before {
+    opacity: 1;
+    transform: translateX(12%);
   }
 
   .studio-primary-button.is-generating {
@@ -480,9 +603,11 @@
   .mask-image-input input,
   .history-panel input {
     color: var(--studio-ink);
-    background-color: var(--studio-surface);
-    border-color: var(--studio-line-strong);
-    box-shadow: 0 1px 0 oklch(100% 0 0 / 0.68) inset;
+    background-color: oklch(98.4% 0.014 86 / 0.94);
+    border-color: oklch(38% 0.05 70 / 0.24);
+    box-shadow:
+      0 1px 0 oklch(100% 0 0 / 0.72) inset,
+      0 8px 18px oklch(34% 0.06 62 / 0.055);
     transition:
       border-color var(--studio-motion-base) var(--studio-ease-out),
       box-shadow var(--studio-motion-base) var(--studio-ease-out),
@@ -500,8 +625,10 @@
     background: var(--studio-surface-strong);
     border-color: var(--studio-teal);
     box-shadow:
-      0 0 0 3px oklch(58% 0.12 184 / 0.16),
-      0 1px 0 oklch(100% 0 0 / 0.74) inset;
+      0 0 0 1px oklch(58% 0.12 184 / 0.34),
+      0 0 0 4px oklch(58% 0.12 184 / 0.15),
+      0 1px 0 oklch(100% 0 0 / 0.78) inset,
+      0 13px 26px oklch(35% 0.08 184 / 0.1);
     transform: translateY(-1px);
   }
 
@@ -604,10 +731,22 @@
     position: relative;
     overflow: hidden;
     background:
-      linear-gradient(135deg, var(--studio-surface-strong), var(--studio-surface-cool)),
-      repeating-linear-gradient(-45deg, transparent 0 10px, oklch(58% 0.12 184 / 0.055) 10px 20px);
-    border-color: var(--studio-teal-line);
-    color: var(--studio-muted-strong);
+      linear-gradient(135deg, oklch(99% 0.012 82 / 0.86), oklch(93.5% 0.04 178 / 0.82)),
+      linear-gradient(45deg, oklch(55% 0.12 184 / 0.08) 25%, transparent 25% 75%, oklch(55% 0.12 184 / 0.08) 75%),
+      linear-gradient(45deg, oklch(55% 0.12 184 / 0.08) 25%, transparent 25% 75%, oklch(55% 0.12 184 / 0.08) 75%);
+    background-position:
+      0 0,
+      0 0,
+      8px 8px;
+    background-size:
+      auto,
+      16px 16px,
+      16px 16px;
+    border-color: oklch(55% 0.13 184 / 0.48);
+    color: var(--studio-teal-strong);
+    box-shadow:
+      0 1px 0 oklch(100% 0 0 / 0.7) inset,
+      0 12px 26px oklch(38% 0.1 184 / 0.1);
   }
 
   .reference-images [data-testid="upload-btn"]::after {
@@ -624,9 +763,12 @@
   }
 
   .reference-images [data-testid="upload-btn"]:not(:disabled):hover {
-    border-color: oklch(53% 0.12 184 / 0.6);
+    border-color: oklch(45% 0.13 184 / 0.72);
     color: var(--studio-teal-strong);
-    box-shadow: 0 12px 28px oklch(48% 0.118 184 / 0.15);
+    box-shadow:
+      0 18px 34px oklch(48% 0.118 184 / 0.18),
+      0 0 0 4px oklch(58% 0.12 184 / 0.12),
+      0 1px 0 oklch(100% 0 0 / 0.72) inset;
   }
 
   .reference-images [data-testid="upload-btn"]:not(:disabled):hover::after {
@@ -804,11 +946,55 @@
   .result-grid [data-testid="empty-state"],
   .result-grid [data-testid="loading-state"] {
     position: relative;
+    isolation: isolate;
+    overflow: hidden;
     border-radius: 7px;
     background:
-      radial-gradient(circle at 50% 52%, oklch(58% 0.12 184 / 0.08), transparent 11rem),
-      radial-gradient(circle at 18% 22%, oklch(75% 0.13 72 / 0.1), transparent 9rem),
-      linear-gradient(180deg, var(--studio-surface), transparent);
+      radial-gradient(circle at 50% 52%, oklch(58% 0.13 184 / 0.14), transparent 12rem),
+      radial-gradient(circle at 18% 22%, oklch(75% 0.14 72 / 0.14), transparent 9rem),
+      linear-gradient(180deg, oklch(99% 0.012 82 / 0.88), transparent);
+    box-shadow:
+      0 0 0 1px oklch(42% 0.07 184 / 0.1) inset,
+      0 14px 38px oklch(34% 0.06 62 / 0.07) inset;
+  }
+
+  .result-grid [data-testid="empty-state"]::before,
+  .result-grid [data-testid="loading-state"]::before {
+    position: absolute;
+    inset: clamp(1rem, 4vw, 2.4rem);
+    z-index: 0;
+    pointer-events: none;
+    content: "";
+    border: 1px solid oklch(50% 0.12 184 / 0.16);
+    border-radius: 8px;
+    background:
+      linear-gradient(oklch(34% 0.08 184 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(34% 0.08 184 / 0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .result-grid [data-testid="empty-state"]::after,
+  .result-grid [data-testid="loading-state"]::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(8rem, 24vw, 13rem);
+    height: clamp(8rem, 24vw, 13rem);
+    z-index: 0;
+    pointer-events: none;
+    content: "";
+    border: 1px dashed oklch(58% 0.16 38 / 0.22);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 1.1rem oklch(58% 0.16 38 / 0.035),
+      0 0 0 2.2rem oklch(58% 0.12 184 / 0.035);
+    transform: translate(-50%, -50%);
+  }
+
+  .result-grid [data-testid="empty-state"] > *,
+  .result-grid [data-testid="loading-state"] > * {
+    position: relative;
+    z-index: 1;
   }
 
   .result-grid [data-testid="loading-state"] > div,
@@ -820,10 +1006,13 @@
 
   .history-panel [data-testid="history-empty"],
   .history-panel [data-testid="history-loading"] {
+    position: relative;
+    overflow: hidden;
     border-radius: 7px;
     background:
-      radial-gradient(circle at 50% 18%, oklch(58% 0.12 184 / 0.08), transparent 8rem),
-      linear-gradient(180deg, oklch(98% 0.018 78 / 0.58), oklch(94% 0.026 78 / 0.34));
+      radial-gradient(circle at 50% 18%, oklch(58% 0.13 184 / 0.12), transparent 8rem),
+      linear-gradient(135deg, oklch(98% 0.018 78 / 0.72), oklch(93.5% 0.04 178 / 0.42));
+    box-shadow: 0 0 0 1px oklch(42% 0.07 184 / 0.08) inset;
   }
 
   .reference-images [data-testid="web-url-list"] > div,
@@ -940,7 +1129,22 @@
   }
 
   .history-panel [data-testid="history-item"] {
+    position: relative;
+    overflow: hidden;
     animation: studio-fade-rise 180ms var(--studio-ease-out) both;
+  }
+
+  .history-panel [data-testid="history-item"]::before {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(180deg, var(--studio-coral-hot), var(--studio-teal));
+    opacity: 0;
+    transition: opacity var(--studio-motion-base) var(--studio-ease-out);
   }
 
   .history-panel [data-testid="history-thumbnail"] {
@@ -956,11 +1160,16 @@
 
   .history-panel [data-testid="history-item"].is-selected {
     background:
-      linear-gradient(180deg, var(--studio-teal-soft), oklch(95% 0.04 178 / 0.72));
-    border-color: oklch(58% 0.12 184 / 0.58);
+      radial-gradient(circle at 100% 0%, oklch(78% 0.14 104 / 0.16), transparent 6rem),
+      linear-gradient(180deg, var(--studio-teal-soft), oklch(95% 0.04 178 / 0.76));
+    border-color: oklch(50% 0.13 184 / 0.66);
     box-shadow:
       0 0 0 1px oklch(58% 0.12 184 / 0.12) inset,
-      0 14px 30px oklch(48% 0.118 184 / 0.16);
+      0 16px 34px oklch(48% 0.118 184 / 0.18);
+  }
+
+  .history-panel [data-testid="history-item"].is-selected::before {
+    opacity: 1;
   }
 
   .history-panel [data-testid="history-item"],
@@ -978,14 +1187,37 @@
   }
 
   .result-grid [data-testid="result-images"] > div {
+    position: relative;
+    overflow: hidden;
+    border-color: oklch(35% 0.055 70 / 0.18);
     box-shadow:
-      0 14px 32px oklch(34% 0.06 62 / 0.12),
-      0 1px 0 oklch(100% 0 0 / 0.58) inset;
+      0 18px 42px oklch(34% 0.06 62 / 0.15),
+      0 1px 0 oklch(100% 0 0 / 0.66) inset;
+  }
+
+  .result-grid [data-testid="result-images"] > div::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    left: 0;
+    z-index: 1;
+    height: 3px;
+    pointer-events: none;
+    content: "";
+    background: linear-gradient(90deg, var(--studio-teal), var(--studio-acid) 44%, var(--studio-coral-hot));
+    opacity: 0.82;
   }
 
   .result-grid [data-testid="result-images"] img {
     background:
-      linear-gradient(135deg, oklch(95.5% 0.032 72), oklch(94% 0.028 184));
+      linear-gradient(45deg, oklch(90% 0.025 82) 25%, transparent 25% 75%, oklch(90% 0.025 82) 75%),
+      linear-gradient(45deg, oklch(90% 0.025 82) 25%, oklch(95.5% 0.032 72) 25% 75%, oklch(90% 0.025 82) 75%);
+    background-position:
+      0 0,
+      10px 10px;
+    background-size:
+      20px 20px,
+      20px 20px;
   }
 
   .result-grid [data-testid="result-images"] > div p {
@@ -1075,6 +1307,10 @@
     .history-panel [data-testid="history-item"]:hover,
     .result-grid [data-testid="result-images"] > div:hover {
       transform: translateY(-2px);
+    }
+
+    .history-panel [data-testid="history-item"]:hover::before {
+      opacity: 0.72;
     }
 
     .reference-images [data-testid="local-image-previews"] > div:hover img,
