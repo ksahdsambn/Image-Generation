@@ -979,24 +979,6 @@
     background-size: 28px 28px;
   }
 
-  .result-grid [data-testid="empty-state"]::after,
-  .result-grid [data-testid="loading-state"]::after {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: clamp(8rem, 24vw, 13rem);
-    height: clamp(8rem, 24vw, 13rem);
-    z-index: 0;
-    pointer-events: none;
-    content: "";
-    border: 1px dashed oklch(58% 0.16 38 / 0.22);
-    border-radius: 50%;
-    box-shadow:
-      0 0 0 0.9rem oklch(58% 0.16 38 / 0.03),
-      0 0 0 1.8rem oklch(58% 0.12 184 / 0.03);
-    transform: translate(-50%, -50%);
-  }
-
   .result-grid [data-testid="empty-state"] > *,
   .result-grid [data-testid="loading-state"] > * {
     position: relative;
