@@ -1,17 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { useSkillStore } from '@/stores/skill'
-import { SKILL_NONE } from '@/types/skill'
-import { Plus, Pencil, Trash2 } from '@lucide/vue'
+import { SKILL_NONE, SKILL_NEW_TRIGGER } from '@/types/skill'
+import { Pencil, Trash2 } from '@lucide/vue'
 
 const store = useSkillStore()
+const selectRef = ref<HTMLSelectElement | null>(null)
 
 function onToggle() {
   store.toggleEnabled()
 }
 
 async function onSelect(event: Event) {
-  const value = (event.target as HTMLSelectElement).value
+  const el = event.target as HTMLSelectElement
+  const value = el.value
+
+  if (value === SKILL_NEW_TRIGGER) {
+    // 恢复下拉显示到当前实际选中项（不入库），再打开新建编辑器
+    await nextTick()
+    if (selectRef.value) selectRef.value.value = store.selectedId || SKILL_NONE
+    store.startCreate()
+    return
+  }
+
   await store.selectSkill(value || SKILL_NONE)
 }
 
@@ -74,6 +85,7 @@ async function confirmDelete(skillId: string) {
 
     <div v-if="store.enabled" class="mt-2.5 space-y-2">
       <select
+        ref="selectRef"
         :value="store.selectedId"
         @change="onSelect"
         :disabled="store.loading"
@@ -85,6 +97,8 @@ async function confirmDelete(skillId: string) {
         <option v-for="entry in store.allSkills" :key="entry.id" :value="entry.id">
           {{ entry.name }}{{ entry.builtin ? '（内置）' : '' }}
         </option>
+        <option disabled>────────</option>
+        <option :value="SKILL_NEW_TRIGGER" data-testid="skill-new-option">＋ 自定义 Skill</option>
       </select>
 
       <p
@@ -145,17 +159,7 @@ async function confirmDelete(skillId: string) {
         </li>
       </ul>
 
-      <!-- 新建按钮 -->
-      <button
-        v-if="!store.draft"
-        type="button"
-        class="flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-stone-300 px-2 py-1.5 text-xs font-medium text-stone-600 hover:border-[#d95c35] hover:text-[#d95c35]"
-        data-testid="skill-new-btn"
-        @click="store.startCreate()"
-      >
-        <Plus :size="14" aria-hidden="true" />
-        新建 Skill
-      </button>
+      <!-- 新建入口已并入下拉框的「自定义 Skill」选项 -->
 
       <!-- 内联编辑区 -->
       <div v-if="store.draft" class="space-y-2 rounded-lg border border-stone-300 bg-white p-2.5" data-testid="skill-editor">

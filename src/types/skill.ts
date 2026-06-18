@@ -47,6 +47,12 @@ export const SKILL_PROMPT_SEPARATOR = '\n\n'
 /** 表示未选择任何 skill 的空 id */
 export const SKILL_NONE = ''
 
+/**
+ * 下拉框「自定义 Skill」入口项的占位 value。
+ * 选中它不代表选中某个 skill，而是触发打开新建/编辑器；store 不存储该值。
+ */
+export const SKILL_NEW_TRIGGER = '__new__'
+
 /** 自定义 skill 的 id 前缀，用于与内置 skill 区分（内置 id 来自清单，不含此前缀） */
 export const CUSTOM_SKILL_ID_PREFIX = 'custom-'
 
