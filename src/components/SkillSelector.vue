@@ -62,7 +62,7 @@ async function confirmDelete(skillId: string) {
 <template>
   <div class="skill-selector min-w-0" data-testid="skill-selector" aria-label="Skill 规范选择">
     <div class="flex items-center justify-between gap-2">
-      <label for="skill-toggle" class="block text-xs font-semibold text-stone-600 mb-1.5 select-none cursor-pointer">
+      <label for="skill-toggle" class="block text-sm font-semibold text-stone-600 mb-1.5 select-none cursor-pointer">
         加载 Skill 规范
       </label>
       <button
