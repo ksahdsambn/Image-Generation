@@ -4,18 +4,19 @@ import { createPinia, setActivePinia } from 'pinia'
 import ReferenceImages from '@/components/ReferenceImages.vue'
 import MaskImageInput from '@/components/MaskImageInput.vue'
 import { useGenerationParamsStore } from '@/stores/generation-params'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
 
 let pinia: ReturnType<typeof createPinia>
 
 function mountReferenceImages() {
   return mount(ReferenceImages, {
-    global: { plugins: [pinia] },
+    global: { plugins: [pinia, createI18nForTest()] },
   })
 }
 
 function mountMaskImageInput() {
   return mount(MaskImageInput, {
-    global: { plugins: [pinia] },
+    global: { plugins: [pinia, createI18nForTest()] },
   })
 }
 
@@ -71,7 +72,7 @@ describe('ReferenceImages (Step 19)', () => {
     const store = useGenerationParamsStore()
     store.addLocalImage({ file: createImageFile(), previewUrl: 'blob:preview1' })
     await wrapper.vm.$nextTick()
-    const removeBtn = wrapper.find('[aria-label="移除参考图 1"]')
+    const removeBtn = wrapper.find('[data-testid="local-image-previews"] button')
     await removeBtn.trigger('click')
     expect(store.localImages.length).toBe(0)
   })
@@ -133,7 +134,7 @@ describe('ReferenceImages (Step 19)', () => {
     const store = useGenerationParamsStore()
     store.addWebImageUrl('https://example.com/image.png')
     await wrapper.vm.$nextTick()
-    const removeBtn = wrapper.find('[aria-label="移除 URL 1"]')
+    const removeBtn = wrapper.find('[data-testid="web-url-list"] button')
     await removeBtn.trigger('click')
     expect(store.webImageUrls.length).toBe(0)
   })

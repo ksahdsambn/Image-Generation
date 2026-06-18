@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import { RotateCcw } from '@lucide/vue'
+import { useI18n } from 'vue-i18n'
 import {
   IMAGE_SIZE_OPTIONS,
   IMAGE_QUALITIES,
@@ -12,26 +13,28 @@ import {
 import SkillSelector from '@/components/SkillSelector.vue'
 
 const store = useGenerationParamsStore()
+const { t } = useI18n()
 
-const qualityLabels: Record<string, string> = {
-  auto: '自动',
-  low: '低清',
-  medium: '中等',
-  high: '高清',
+function qualityLabel(q: string): string {
+  return t(`form.qualityOptions.${q}`)
+}
+
+function backgroundLabel(b: string): string {
+  return t(`form.backgroundOptions.${b}`)
 }
 </script>
 
 <template>
-  <div class="generation-form min-w-0 space-y-4" data-testid="generation-form" aria-label="生成参数表单">
+  <div class="generation-form min-w-0 space-y-4" data-testid="generation-form" :aria-label="t('form.ariaLabel')">
     <div>
       <label for="prompt-input" class="block text-sm font-semibold text-stone-700 mb-1.5">
-        Prompt <span class="text-red-700">*</span>
+        {{ t('form.promptLabel') }} <span class="text-red-700">*</span>
       </label>
       <textarea
         id="prompt-input"
         :value="store.prompt"
         @input="store.prompt = ($event.target as HTMLTextAreaElement).value"
-        placeholder="描述你想生成的图片..."
+        :placeholder="t('form.promptPlaceholder')"
         rows="3"
         class="w-full rounded-lg border border-stone-300 px-3.5 py-2.5 text-sm leading-6 focus:outline-none focus:ring-0 resize-y shadow-sm"
         data-testid="prompt-input"
@@ -45,7 +48,7 @@ const qualityLabels: Record<string, string> = {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label for="size-select" class="block text-xs font-semibold text-stone-600 mb-1.5">尺寸</label>
+        <label for="size-select" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.size') }}</label>
         <select
           id="size-select"
           :value="store.size"
@@ -54,20 +57,20 @@ const qualityLabels: Record<string, string> = {
           data-testid="size-select"
         >
           <option v-for="option in IMAGE_SIZE_OPTIONS" :key="option.value" :value="option.value">
-            {{ option.label }}
+            {{ t(`form.sizeOptions.${option.labelKey}`) }}
           </option>
         </select>
       </div>
 
       <div>
-        <label for="count-input" class="block text-xs font-semibold text-stone-600 mb-1.5">数量 ({{ MIN_IMAGE_COUNT }}-{{ MAX_IMAGE_COUNT }})</label>
+        <label for="count-input" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.count', { min: MIN_IMAGE_COUNT, max: MAX_IMAGE_COUNT }) }}</label>
         <div class="flex min-w-0 items-center gap-1.5">
           <button
             @click="store.setCount(Math.max(MIN_IMAGE_COUNT, store.n - 1))"
             :disabled="store.n <= MIN_IMAGE_COUNT"
             class="h-11 w-11 lg:h-10 lg:w-10 rounded-lg border border-stone-300 bg-white/80 text-sm font-semibold text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
-            aria-label="减少数量"
+            :aria-label="t('form.countDecrement')"
           >-</button>
           <span class="min-h-11 min-w-11 rounded-lg border border-stone-200 bg-stone-50/80 px-3 py-2 text-center text-sm font-semibold text-stone-800 lg:min-h-10" data-testid="count-display">{{ store.n }}</span>
           <button
@@ -75,7 +78,7 @@ const qualityLabels: Record<string, string> = {
             :disabled="store.n >= MAX_IMAGE_COUNT"
             class="h-11 w-11 lg:h-10 lg:w-10 rounded-lg border border-stone-300 bg-white/80 text-sm font-semibold text-stone-700 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed"
             type="button"
-            aria-label="增加数量"
+            :aria-label="t('form.countIncrement')"
           >+</button>
         </div>
       </div>
@@ -83,7 +86,7 @@ const qualityLabels: Record<string, string> = {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label for="quality-select" class="block text-xs font-semibold text-stone-600 mb-1.5">质量</label>
+        <label for="quality-select" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.quality') }}</label>
         <select
           id="quality-select"
           :value="store.quality"
@@ -91,12 +94,12 @@ const qualityLabels: Record<string, string> = {
           class="w-full rounded-lg border border-stone-300 px-2.5 py-2 text-sm bg-white focus:outline-none focus:ring-0 shadow-sm"
           data-testid="quality-select"
         >
-          <option v-for="q in IMAGE_QUALITIES" :key="q" :value="q">{{ qualityLabels[q] }}</option>
+          <option v-for="q in IMAGE_QUALITIES" :key="q" :value="q">{{ qualityLabel(q) }}</option>
         </select>
       </div>
 
       <div>
-        <label for="background-select" class="block text-xs font-semibold text-stone-600 mb-1.5">背景</label>
+        <label for="background-select" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.background') }}</label>
         <select
           id="background-select"
           :value="store.background"
@@ -104,14 +107,14 @@ const qualityLabels: Record<string, string> = {
           class="w-full rounded-lg border border-stone-300 px-2.5 py-2 text-sm bg-white focus:outline-none focus:ring-0 shadow-sm"
           data-testid="background-select"
         >
-          <option v-for="b in IMAGE_BACKGROUNDS" :key="b" :value="b">{{ b === 'auto' ? '自动' : b === 'transparent' ? '透明' : '不透明' }}</option>
+          <option v-for="b in IMAGE_BACKGROUNDS" :key="b" :value="b">{{ backgroundLabel(b) }}</option>
         </select>
       </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
-        <label for="format-select" class="block text-xs font-semibold text-stone-600 mb-1.5">输出格式</label>
+        <label for="format-select" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.outputFormat') }}</label>
         <select
           id="format-select"
           :value="store.outputFormat"
@@ -124,7 +127,7 @@ const qualityLabels: Record<string, string> = {
       </div>
 
       <div v-if="store.compressionEnabled">
-        <label for="compression-input" class="block text-xs font-semibold text-stone-600 mb-1.5">压缩 (0-100)</label>
+        <label for="compression-input" class="block text-xs font-semibold text-stone-600 mb-1.5">{{ t('form.compression') }}</label>
         <input
           id="compression-input"
           type="number"
@@ -144,10 +147,10 @@ const qualityLabels: Record<string, string> = {
         class="flex min-h-11 items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-stone-600 hover:bg-stone-100 hover:text-stone-900 lg:min-h-8"
         type="button"
         data-testid="reset-params-btn"
-        aria-label="重置参数"
+        :aria-label="t('form.resetParamsAriaLabel')"
       >
         <RotateCcw :size="12" aria-hidden="true" />
-        重置参数
+        {{ t('form.resetParams') }}
       </button>
     </div>
   </div>

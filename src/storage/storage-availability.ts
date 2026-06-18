@@ -1,18 +1,27 @@
 import { isIndexedDBAvailable } from '@/storage/database'
+import { i18n } from '@/i18n'
 
 let _available: boolean | null = null
 
-export async function checkStorageAvailability(): Promise<{ available: boolean; message?: string }> {
+/**
+ * 检查本地存储可用性。
+ * messageKey 返回 i18n 的 key（'historyStorage.unsupported' / 'historyStorage.initFailed'），
+ * HistoryPanel 模板可用 t(messageKey) 直接渲染，切换语言时自动跟随；
+ * message 同时返回当前语言的即时文案（向后兼容/非响应式场景）。
+ */
+export async function checkStorageAvailability(): Promise<{ available: boolean; messageKey?: string; message?: string }> {
   try {
     const available = await isIndexedDBAvailable()
     _available = available
     if (!available) {
-      return { available: false, message: '浏览器不支持 IndexedDB，本地历史功能不可用，但当前生成结果仍可下载' }
+      const key = 'historyStorage.unsupported'
+      return { available: false, messageKey: key, message: i18n.global.t(key) }
     }
     return { available: true }
   } catch {
     _available = false
-    return { available: false, message: 'IndexedDB 初始化失败，本地历史功能不可用，但当前生成结果仍可下载' }
+    const key = 'historyStorage.initFailed'
+    return { available: false, messageKey: key, message: i18n.global.t(key) }
   }
 }
 

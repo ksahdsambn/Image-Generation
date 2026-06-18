@@ -1,5 +1,6 @@
 import { loadConfig } from '@/utils/config'
 import { classifyHttpError, classifyNetworkError, type AppError } from '@/types/errors'
+import { translateValidation } from '@/i18n'
 
 export interface ConnectionTestResult {
   success: boolean
@@ -21,7 +22,7 @@ export async function testConnection(
   if (!apiKey.trim()) {
     return {
       success: false,
-      error: { code: 'VALIDATION_ERROR', userMessage: '缺少 API Key', debugHint: '' },
+      error: { code: 'VALIDATION_ERROR', userMessage: translateValidation('missingApiKey'), debugHint: '' },
     }
   }
 

@@ -7,6 +7,7 @@ import { checkStorageAvailability } from '@/storage/storage-availability'
 import { queryHistory, getHistoryById } from '@/storage/history-reader'
 import { deleteHistoryRecord, clearAllHistory } from '@/storage/history-deleter'
 import type { HistoryRecord } from '@/types/history'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
 
 vi.mock('@/storage/storage-availability')
 vi.mock('@/storage/history-reader')
@@ -17,7 +18,7 @@ let pinia: ReturnType<typeof createPinia>
 function mountHistoryPanel() {
   return mount(HistoryPanel, {
     global: {
-      plugins: [pinia],
+      plugins: [pinia, createI18nForTest()],
       stubs: { teleport: true },
     },
   })
@@ -178,7 +179,7 @@ describe('HistoryPanel (Step 21)', () => {
   it('shows storage unavailable message when storage fails', async () => {
     vi.mocked(checkStorageAvailability).mockResolvedValue({
       available: false,
-      message: 'IndexedDB 不可用',
+      messageKey: 'historyStorage.unsupported',
     })
     const wrapper = mountHistoryPanel()
     await flushPromises()

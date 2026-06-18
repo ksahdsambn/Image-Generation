@@ -12,12 +12,14 @@ import {
   DEFAULT_QUALITY,
   MAX_IMAGE_COUNT,
 } from '@/types/generation'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
+import { i18n as globalI18n } from '@/i18n'
 
 let pinia: ReturnType<typeof createPinia>
 
 function mountForm() {
   return mount(GenerationForm, {
-    global: { plugins: [pinia] },
+    global: { plugins: [pinia, createI18nForTest()] },
   })
 }
 
@@ -46,7 +48,8 @@ describe('GenerationForm (Step 18)', () => {
     expect(select.exists()).toBe(true)
     for (const option of IMAGE_SIZE_OPTIONS) {
       expect(select.html()).toContain(option.value)
-      expect(select.text()).toContain(option.label.trim())
+      const label = globalI18n.global.t(`form.sizeOptions.${option.labelKey}`)
+      expect(select.text()).toContain(label.trim())
     }
   })
 
@@ -69,7 +72,8 @@ describe('GenerationForm (Step 18)', () => {
   it('count increment works', async () => {
     const wrapper = mountForm()
     const store = useGenerationParamsStore()
-    const btns = wrapper.findAll('button[aria-label="增加数量"]')
+    const t = globalI18n.global.t
+    const btns = wrapper.findAll(`button[aria-label="${t('form.countIncrement')}"]`)
     expect(btns.length).toBe(1)
     await btns[0].trigger('click')
     expect(store.n).toBe(2)
@@ -80,7 +84,8 @@ describe('GenerationForm (Step 18)', () => {
     const store = useGenerationParamsStore()
     store.setCount(3)
     await wrapper.vm.$nextTick()
-    const btns = wrapper.findAll('button[aria-label="减少数量"]')
+    const t = globalI18n.global.t
+    const btns = wrapper.findAll(`button[aria-label="${t('form.countDecrement')}"]`)
     await btns[0].trigger('click')
     expect(store.n).toBe(2)
   })
@@ -90,13 +95,15 @@ describe('GenerationForm (Step 18)', () => {
     const store = useGenerationParamsStore()
     store.setCount(MAX_IMAGE_COUNT)
     await wrapper.vm.$nextTick()
-    const btns = wrapper.findAll('button[aria-label="增加数量"]')
+    const t = globalI18n.global.t
+    const btns = wrapper.findAll(`button[aria-label="${t('form.countIncrement')}"]`)
     expect((btns[0].element as HTMLButtonElement).disabled).toBe(true)
   })
 
   it('count cannot go below min', () => {
     const wrapper = mountForm()
-    const btns = wrapper.findAll('button[aria-label="减少数量"]')
+    const t = globalI18n.global.t
+    const btns = wrapper.findAll(`button[aria-label="${t('form.countDecrement')}"]`)
     expect((btns[0].element as HTMLButtonElement).disabled).toBe(true)
   })
 

@@ -4,12 +4,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import ApiKeyInput from '@/components/ApiKeyInput.vue'
 import { useApiKeyStore } from '@/stores/api-key'
 import { useConnectionStore } from '@/stores/connection'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
 
 let pinia: ReturnType<typeof createPinia>
 
 function mountApiKeyInput() {
   return mount(ApiKeyInput, {
-    global: { plugins: [pinia] },
+    global: { plugins: [pinia, createI18nForTest()] },
   })
 }
 

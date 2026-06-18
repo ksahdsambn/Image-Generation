@@ -5,13 +5,14 @@ import Workbench from '@/pages/Workbench.vue'
 import { useApiKeyStore } from '@/stores/api-key'
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import { useGenerationStore } from '@/stores/generation'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
 
 let pinia: ReturnType<typeof createPinia>
 
 function mountWorkbench() {
   return mount(Workbench, {
     global: {
-      plugins: [pinia],
+      plugins: [pinia, createI18nForTest()],
       stubs: {
         teleport: true,
       },

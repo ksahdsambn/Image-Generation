@@ -1,3 +1,5 @@
+import { i18n } from '@/i18n'
+
 export interface AppConfig {
   sub2apiBaseUrl: string
   appTitle: string
@@ -34,7 +36,7 @@ export function loadConfig(env?: Record<string, string | undefined>): AppConfig 
 
   const rawBaseUrl = normalizeBaseUrl(e.VITE_SUB2API_BASE_URL)
   const configError: string | null = rawBaseUrl === ''
-    ? '缺少 Sub2API 后端地址配置，请在环境变量中设置 VITE_SUB2API_BASE_URL'
+    ? i18n.global.t('validation.configError')
     : null
 
   return {

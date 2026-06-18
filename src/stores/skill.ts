@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import type { AppError } from '@/types/errors'
+import { translateValidation } from '@/i18n'
 import { loadSkillContent } from '@/services/skill-loader'
 import {
   builtinSkillOptions,
@@ -180,7 +181,7 @@ export const useSkillStore = defineStore('skill', () => {
         content: draft.value.content,
       })
       if (!result.success || !result.data) {
-        error.value = result.error ?? { code: 'STORAGE_ERROR', userMessage: '保存 Skill 失败', debugHint: '' }
+        error.value = result.error ?? { code: 'STORAGE_ERROR', userMessage: translateValidation('saveSkillFailed'), debugHint: '' }
         return false
       }
       await loadCustomSkills()
@@ -195,7 +196,7 @@ export const useSkillStore = defineStore('skill', () => {
   async function removeCustomSkill(skillId: string): Promise<boolean> {
     const result = await deleteCustomSkill(skillId)
     if (!result.success) {
-      error.value = result.error ?? { code: 'STORAGE_ERROR', userMessage: '删除 Skill 失败', debugHint: '' }
+      error.value = result.error ?? { code: 'STORAGE_ERROR', userMessage: translateValidation('deleteSkillFailed'), debugHint: '' }
       return false
     }
     if (selectedId.value === skillId) {

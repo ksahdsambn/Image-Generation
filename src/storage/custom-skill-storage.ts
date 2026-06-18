@@ -1,5 +1,6 @@
 import { getDatabase } from '@/storage/database'
 import { classifyStorageError, type AppError } from '@/types/errors'
+import { translateValidation } from '@/i18n'
 import { CUSTOM_SKILL_ID_PREFIX, type CustomSkillRecord } from '@/types/skill'
 
 export interface SaveCustomSkillInput {
@@ -48,10 +49,10 @@ export async function saveCustomSkill(input: SaveCustomSkillInput): Promise<Cust
   const name = input.name.trim()
   const content = input.content.trim()
   if (!name) {
-    return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: 'Skill 名称不能为空', debugHint: '' } }
+    return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: translateValidation('skillNameEmpty'), debugHint: '' } }
   }
   if (!content) {
-    return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: 'Skill 内容不能为空', debugHint: '' } }
+    return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: translateValidation('skillContentEmpty'), debugHint: '' } }
   }
 
   try {
@@ -62,7 +63,7 @@ export async function saveCustomSkill(input: SaveCustomSkillInput): Promise<Cust
     if (input.skillId) {
       const existing = await db.customSkills.where('skillId').equals(input.skillId).first()
       if (!existing || existing.pk === undefined) {
-        return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: '要编辑的 Skill 不存在', debugHint: '' } }
+        return { success: false, error: { code: 'VALIDATION_ERROR', userMessage: translateValidation('skillNotFound'), debugHint: '' } }
       }
       const updated: CustomSkillRecord = {
         ...existing,

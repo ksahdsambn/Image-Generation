@@ -1,5 +1,6 @@
 import { loadConfig } from '@/utils/config'
 import { classifyHttpError, classifyNetworkError, createConfigError, createValidationError, type AppError } from '@/types/errors'
+import { translateValidation } from '@/i18n'
 import { MODEL, RESPONSE_FORMAT, type LocalImage, type WebImageUrl } from '@/types/generation'
 import type { ApiResponse, RequestMode } from '@/types/api'
 
@@ -46,7 +47,7 @@ export async function sendGenerationsRequest(
 ): Promise<ApiResponse> {
   const config = loadConfig()
   if (config.configError) throw createConfigError(config.configError)
-  if (!apiKey.trim()) throw createValidationError('缺少 API Key')
+  if (!apiKey.trim()) throw createValidationError(translateValidation('missingApiKey'))
 
   const url = `${config.sub2apiBaseUrl}/v1/images/generations`
   const body = buildGenerationsBody(params)
@@ -79,10 +80,10 @@ export async function sendGenerationsRequest(
 
 export function validateImageFile(file: File): AppError | null {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return createValidationError('不支持的文件类型，仅支持 PNG、JPEG、WebP、GIF 图片')
+    return createValidationError(translateValidation('unsupportedFileType'))
   }
   if (file.size > MAX_FILE_SIZE) {
-    return createValidationError(`文件大小超过限制（最大 ${MAX_FILE_SIZE / 1024 / 1024}MB）`)
+    return createValidationError(translateValidation('fileTooLarge', { max: MAX_FILE_SIZE / 1024 / 1024 }))
   }
   return null
 }
@@ -129,8 +130,8 @@ export async function sendEditsMultipartRequest(
 ): Promise<ApiResponse> {
   const config = loadConfig()
   if (config.configError) throw createConfigError(config.configError)
-  if (!apiKey.trim()) throw createValidationError('缺少 API Key')
-  if (params.images.length === 0) throw createValidationError('缺少参考图')
+  if (!apiKey.trim()) throw createValidationError(translateValidation('missingApiKey'))
+  if (params.images.length === 0) throw createValidationError(translateValidation('missingReferenceImages'))
 
   for (const image of params.images) {
     const fileError = validateImageFile(image)
@@ -185,17 +186,17 @@ export function validateImageUrl(url: string): AppError | null {
   try {
     const parsed = new URL(url)
     if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
-      return createValidationError('图片 URL 必须使用 http 或 https 协议')
+      return createValidationError(translateValidation('urlBadProtocol'))
     }
     if (parsed.username || parsed.password) {
-      return createValidationError('图片 URL 不能包含用户名或密码')
+      return createValidationError(translateValidation('urlHasCredentials'))
     }
     if (isBlockedUrlHost(parsed.hostname)) {
-      return createValidationError('图片 URL 必须指向公网主机')
+      return createValidationError(translateValidation('urlBlockedHost'))
     }
     return null
   } catch {
-    return createValidationError('图片 URL 格式无效')
+    return createValidationError(translateValidation('urlInvalid'))
   }
 }
 
@@ -267,8 +268,8 @@ export async function sendEditsJsonRequest(
 ): Promise<ApiResponse> {
   const config = loadConfig()
   if (config.configError) throw createConfigError(config.configError)
-  if (!apiKey.trim()) throw createValidationError('缺少 API Key')
-  if (params.imageUrls.length === 0) throw createValidationError('缺少图片 URL')
+  if (!apiKey.trim()) throw createValidationError(translateValidation('missingApiKey'))
+  if (params.imageUrls.length === 0) throw createValidationError(translateValidation('missingImageUrl'))
 
   for (const url of params.imageUrls) {
     const urlError = validateImageUrl(url)

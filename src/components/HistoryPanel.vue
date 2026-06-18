@@ -2,18 +2,22 @@
 import { ref, onBeforeUnmount, onMounted, watch } from 'vue'
 import { useGenerationParamsStore } from '@/stores/generation-params'
 import { useGenerationStore } from '@/stores/generation'
+import { useLocaleStore } from '@/stores/locale'
 import { queryHistory, getHistoryById } from '@/storage/history-reader'
 import { deleteHistoryRecord, clearAllHistory } from '@/storage/history-deleter'
 import { checkStorageAvailability } from '@/storage/storage-availability'
 import type { HistoryRecord, HistoryQueryResult } from '@/types/history'
 import { Search, Download, Trash2, RotateCcw, Trash, ImageIcon, AlertTriangle, ChevronRight, X as XIcon } from '@lucide/vue'
 import { generateFilename } from '@/utils/image-utils'
+import { useI18n } from 'vue-i18n'
 
 const paramsStore = useGenerationParamsStore()
 const generationStore = useGenerationStore()
+const localeStore = useLocaleStore()
+const { t } = useI18n()
 
 const storageAvailable = ref<boolean | null>(null)
-const storageMessage = ref('')
+const storageMessageKey = ref('')
 const searchQuery = ref('')
 const startDate = ref('')
 const endDate = ref('')
@@ -29,7 +33,7 @@ const thumbnailUrls = ref<Map<number, string>>(new Map())
 onMounted(async () => {
   const check = await checkStorageAvailability()
   storageAvailable.value = check.available
-  storageMessage.value = check.message || ''
+  storageMessageKey.value = check.messageKey ?? ''
   if (check.available) {
     await loadHistory()
   }
@@ -113,7 +117,7 @@ async function downloadHistoryImage(record: HistoryRecord) {
 }
 
 async function confirmDelete(id: number) {
-  if (!confirm('确定要删除这条历史记录吗？')) return
+  if (!confirm(t('history.confirmDelete'))) return
   await deleteHistoryRecord(id)
   await loadHistory()
   if (selectedRecord.value?.id === id) {
@@ -122,7 +126,7 @@ async function confirmDelete(id: number) {
 }
 
 async function confirmClearAll() {
-  if (!confirm('确定要清空所有历史记录吗？此操作不可恢复。')) return
+  if (!confirm(t('history.confirmClearAll'))) return
   await clearAllHistory()
   await loadHistory()
   selectedRecord.value = null
@@ -173,7 +177,7 @@ async function downloadFullImage() {
 }
 
 function formatDate(ts: number): string {
-  return new Date(ts).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+  return new Date(ts).toLocaleString(localeStore.currentLocale, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
 }
 
 onBeforeUnmount(() => {
@@ -183,26 +187,26 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="history-panel" data-testid="history-panel" aria-label="本地历史">
+  <div class="history-panel" data-testid="history-panel" :aria-label="t('history.ariaLabel')">
     <div class="flex min-w-0 items-center justify-between gap-3 mb-3">
-      <h2 class="min-w-0 text-sm font-semibold text-stone-700">本地历史</h2>
+      <h2 class="min-w-0 text-sm font-semibold text-stone-700">{{ t('history.title') }}</h2>
       <button
         v-if="historyResult.total > 0"
         @click="confirmClearAll()"
         class="flex min-h-11 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-50 hover:text-red-800 lg:min-h-8"
         type="button"
         data-testid="clear-all-btn"
-        aria-label="清空全部历史"
+        :aria-label="t('history.clearAllAriaLabel')"
       >
         <Trash :size="12" aria-hidden="true" />
-        清空
+        {{ t('history.clear') }}
       </button>
     </div>
 
     <div v-if="storageAvailable === false" class="p-2 rounded-lg border border-amber-200 bg-amber-50/90 text-amber-800 text-xs" data-testid="storage-unavailable" role="alert" aria-live="polite">
       <div class="flex min-w-0 items-start gap-1.5">
         <AlertTriangle :size="14" class="shrink-0 mt-0.5" aria-hidden="true" />
-        <span class="min-w-0 break-words">{{ storageMessage }}</span>
+        <span class="min-w-0 break-words">{{ t(storageMessageKey) }}</span>
       </div>
     </div>
 
@@ -214,10 +218,10 @@ onBeforeUnmount(() => {
             <input
               v-model="searchQuery"
               type="text"
-              placeholder="搜索 Prompt..."
+              :placeholder="t('history.searchPlaceholder')"
               class="w-full rounded-lg border border-stone-300 pl-8 pr-2 py-2 text-xs focus:outline-none focus:ring-0 shadow-sm"
               data-testid="search-input"
-              aria-label="搜索历史 Prompt"
+              :aria-label="t('history.searchAriaLabel')"
               @keydown.enter="searchHistory()"
             />
           </div>
@@ -225,8 +229,9 @@ onBeforeUnmount(() => {
             @click="searchHistory()"
             class="min-h-11 px-2.5 py-2 rounded-lg bg-teal-700 text-white text-xs font-semibold hover:bg-teal-800 shadow-sm lg:min-h-10"
             type="button"
-            aria-label="搜索"
-          >搜索</button>
+            data-testid="history-search-btn"
+            :aria-label="t('common.search')"
+          >{{ t('common.search') }}</button>
         </div>
         <div class="grid grid-cols-1 gap-1.5 min-[420px]:grid-cols-2">
           <input
@@ -234,7 +239,7 @@ onBeforeUnmount(() => {
             type="date"
             class="min-h-11 rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm lg:min-h-9"
             data-testid="start-date"
-            aria-label="历史开始日期"
+            :aria-label="t('history.startDateAriaLabel')"
             @change="searchHistory()"
           />
           <input
@@ -242,22 +247,22 @@ onBeforeUnmount(() => {
             type="date"
             class="min-h-11 rounded-lg border border-stone-300 px-2 py-1.5 text-xs focus:outline-none focus:ring-0 shadow-sm lg:min-h-9"
             data-testid="end-date"
-            aria-label="历史结束日期"
+            :aria-label="t('history.endDateAriaLabel')"
             @change="searchHistory()"
           />
         </div>
       </div>
 
-      <p class="text-xs font-medium text-stone-600 mb-2 break-words">图片仅保存在当前浏览器本地</p>
+      <p class="text-xs font-medium text-stone-600 mb-2 break-words">{{ t('history.storageHint') }}</p>
 
       <div v-if="loading && historyResult.records.length === 0" class="py-8 text-center text-stone-600 text-xs" data-testid="history-loading" role="status" aria-live="polite" aria-busy="true">
         <div class="w-6 h-6 border-2 border-teal-700 border-t-transparent rounded-full animate-spin mx-auto mb-2" aria-hidden="true"></div>
-        加载中...
+        {{ t('history.loading') }}
       </div>
 
       <div v-else-if="historyResult.records.length === 0" class="py-8 text-center text-stone-600" data-testid="history-empty">
         <ImageIcon :size="24" class="mx-auto mb-1 text-teal-700" aria-hidden="true" />
-        <p class="text-xs font-medium">暂无历史记录</p>
+        <p class="text-xs font-medium">{{ t('history.empty') }}</p>
       </div>
 
       <div v-else class="space-y-2 max-h-[calc(100vh-300px)] overflow-y-auto pr-1" data-testid="history-list">
@@ -275,7 +280,7 @@ onBeforeUnmount(() => {
           role="button"
           tabindex="0"
           :aria-pressed="selectedRecord?.id === record.id"
-          :aria-label="'选择历史记录：' + record.prompt"
+          :aria-label="t('history.selectAriaLabel', { prompt: record.prompt })"
           data-testid="history-item"
         >
           <div
@@ -286,7 +291,7 @@ onBeforeUnmount(() => {
             @keydown.space.stop.prevent="viewFullImage(record)"
             role="button"
             tabindex="0"
-            :aria-label="'预览历史图片：' + record.prompt"
+            :aria-label="t('history.previewAriaLabel', { prompt: record.prompt })"
             data-testid="history-thumbnail"
           >
             <img
@@ -307,9 +312,9 @@ onBeforeUnmount(() => {
                 @click.stop="reloadParams(record)"
                 class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-100 text-stone-600 hover:text-stone-800 lg:h-7 lg:w-7"
                 type="button"
-                :aria-label="'重新载入参数'"
+                :aria-label="t('history.reloadParamsAriaLabel')"
                 data-testid="reload-params-btn"
-                title="载入参数"
+                :title="t('history.reloadParamsTitle')"
               >
                 <RotateCcw :size="12" aria-hidden="true" />
               </button>
@@ -317,9 +322,9 @@ onBeforeUnmount(() => {
                 @click.stop="downloadHistoryImage(record)"
                 class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-100 text-stone-600 hover:text-stone-800 lg:h-7 lg:w-7"
                 type="button"
-                :aria-label="'下载图片'"
+                :aria-label="t('history.downloadAriaLabel')"
                 data-testid="download-history-btn"
-                title="下载"
+                :title="t('history.downloadTitle')"
               >
                 <Download :size="12" aria-hidden="true" />
               </button>
@@ -327,9 +332,9 @@ onBeforeUnmount(() => {
                 @click.stop="confirmDelete(record.id!)"
                 class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-red-50 text-stone-600 hover:text-red-700 lg:h-7 lg:w-7"
                 type="button"
-                :aria-label="'删除记录'"
+                :aria-label="t('history.deleteAriaLabel')"
                 data-testid="delete-history-btn"
-                title="删除"
+                :title="t('history.deleteTitle')"
               >
                 <Trash2 :size="12" aria-hidden="true" />
               </button>
@@ -343,9 +348,9 @@ onBeforeUnmount(() => {
           class="flex min-h-11 w-full items-center justify-center gap-1 rounded-lg border border-stone-200 bg-white/70 py-2 text-xs font-medium text-teal-700 hover:bg-stone-100 hover:text-teal-800"
           type="button"
           data-testid="load-more-btn"
-          aria-label="加载更多历史记录"
+          :aria-label="t('history.loadMoreAriaLabel')"
         >
-          加载更多
+          {{ t('history.loadMore') }}
           <ChevronRight :size="12" class="rotate-90" aria-hidden="true" />
         </button>
       </div>
@@ -360,13 +365,13 @@ onBeforeUnmount(() => {
         data-testid="image-modal"
         role="dialog"
         aria-modal="true"
-        aria-label="历史图片预览"
+        :aria-label="t('history.modalAriaLabel')"
         tabindex="-1"
       >
         <div class="relative max-h-[90vh] max-w-[calc(100vw-1rem)] bg-[#fffdfa] rounded-lg overflow-hidden shadow-2xl sm:max-w-4xl">
           <img
             :src="fullImageUrl"
-            alt="历史图片"
+            :alt="t('history.modalImgAlt')"
             decoding="async"
             class="max-w-full max-h-[80vh] object-contain"
           />
@@ -375,7 +380,7 @@ onBeforeUnmount(() => {
               @click="downloadFullImage()"
               class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-9 lg:w-9"
               type="button"
-              aria-label="下载图片"
+              :aria-label="t('history.downloadAriaLabel')"
             >
               <Download :size="16" aria-hidden="true" />
             </button>
@@ -383,7 +388,7 @@ onBeforeUnmount(() => {
               @click="closeFullImage()"
               class="flex h-11 w-11 items-center justify-center rounded-lg bg-[#fffdfa]/95 text-stone-700 hover:bg-white shadow lg:h-9 lg:w-9"
               type="button"
-              aria-label="关闭"
+              :aria-label="t('common.close')"
             >
               <XIcon :size="16" aria-hidden="true" />
             </button>

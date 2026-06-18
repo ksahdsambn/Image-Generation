@@ -147,19 +147,19 @@ describe('generation types', () => {
       expect(IMAGE_SIZES).toContain('2880x2880')
     })
 
-    it('IMAGE_SIZE_OPTIONS exposes user-facing labels', () => {
+    it('IMAGE_SIZE_OPTIONS exposes labelKey references', () => {
       expect(DEFAULT_IMAGE_SIZE).toBe('auto')
       expect(IMAGE_SIZE_OPTIONS).toEqual([
-        { value: 'auto', label: '自动' },
-        { value: '1024x1024', label: '1K 方形 1:1      1024x1024' },
-        { value: '1536x1024', label: '1K 横版 3:2      1536x1024' },
-        { value: '1024x1536', label: '1K 竖版 2:3      1024x1536' },
-        { value: '2048x2048', label: '2K 方形 1:1      2048x2048' },
-        { value: '2048x1152', label: '2K 宽屏 16:9     2048x1152' },
-        { value: '1152x2048', label: '2K 故事版 9:16   1152x2048' },
-        { value: '3840x2160', label: '4K 横版 16:9     3840x2160' },
-        { value: '2160x3840', label: '4K 竖版 9:16     2160x3840' },
-        { value: '2880x2880', label: '4K 方形 1:1      2880x2880' },
+        { value: 'auto', labelKey: 'auto' },
+        { value: '1024x1024', labelKey: '1024x1024' },
+        { value: '1536x1024', labelKey: '1536x1024' },
+        { value: '1024x1536', labelKey: '1024x1536' },
+        { value: '2048x2048', labelKey: '2048x2048' },
+        { value: '2048x1152', labelKey: '2048x1152' },
+        { value: '1152x2048', labelKey: '1152x2048' },
+        { value: '3840x2160', labelKey: '3840x2160' },
+        { value: '2160x3840', labelKey: '2160x3840' },
+        { value: '2880x2880', labelKey: '2880x2880' },
       ])
     })
 

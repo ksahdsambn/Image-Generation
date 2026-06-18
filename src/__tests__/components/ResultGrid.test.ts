@@ -5,12 +5,13 @@ import ResultGrid from '@/components/ResultGrid.vue'
 import { useGenerationStore } from '@/stores/generation'
 import type { ParsedImageResult } from '@/types/api'
 import { AppErrorCode, type AppError } from '@/types/errors'
+import { createI18nForTest } from '@/__tests__/helpers/i18n'
 
 let pinia: ReturnType<typeof createPinia>
 
 function mountResultGrid() {
   return mount(ResultGrid, {
-    global: { plugins: [pinia] },
+    global: { plugins: [pinia, createI18nForTest()] },
   })
 }
 

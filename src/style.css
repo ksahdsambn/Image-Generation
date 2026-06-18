@@ -450,16 +450,16 @@
     position: relative;
   }
 
-  section[aria-label="生成配置"] > .studio-card:nth-of-type(1)::after {
+  section[data-section="config"] > .studio-card:nth-of-type(1)::after {
     background: linear-gradient(90deg, var(--studio-coral-hot), var(--studio-oxide) 50%, transparent);
   }
 
-  section[aria-label="生成配置"] > .studio-card:nth-of-type(2)::after,
-  section[aria-label="生成配置"] > .studio-card:nth-of-type(3)::after {
+  section[data-section="config"] > .studio-card:nth-of-type(2)::after,
+  section[data-section="config"] > .studio-card:nth-of-type(3)::after {
     background: linear-gradient(90deg, var(--studio-teal), var(--studio-acid) 52%, transparent);
   }
 
-  section[aria-label="生成结果"] > .studio-card {
+  section[data-section="result"] > .studio-card {
     background:
       radial-gradient(circle at 50% 46%, oklch(99% 0.012 82 / 0.9), transparent 19rem),
       linear-gradient(135deg, oklch(98% 0.016 82 / 0.94), oklch(93.5% 0.034 166 / 0.78));
@@ -470,7 +470,7 @@
       0 0 0 1px oklch(70% 0.13 184 / 0.07);
   }
 
-  section[aria-label="生成结果"] > .studio-card::before {
+  section[data-section="result"] > .studio-card::before {
     background:
       linear-gradient(90deg, oklch(64% 0.16 38 / 0.2), transparent 26%),
       radial-gradient(circle at 50% 44%, oklch(77% 0.08 104 / 0.16), transparent 13rem),
@@ -478,7 +478,7 @@
     opacity: 0.88;
   }
 
-  section[aria-label="生成结果"] > .studio-card::after {
+  section[data-section="result"] > .studio-card::after {
     background: linear-gradient(90deg, var(--studio-teal), var(--studio-acid) 46%, var(--studio-coral-hot) 82%, transparent);
     opacity: 0.9;
   }
@@ -901,7 +901,7 @@
 
   .reference-images [data-testid="add-url-btn"],
   .mask-image-input [data-testid="set-mask-url-btn"],
-  .history-panel button[aria-label="搜索"] {
+  .history-panel [data-testid="history-search-btn"] {
     min-width: 42px;
     min-height: 40px;
   }

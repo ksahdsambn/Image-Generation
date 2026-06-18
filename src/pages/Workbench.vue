@@ -10,12 +10,15 @@ import ReferenceImages from '@/components/ReferenceImages.vue'
 import MaskImageInput from '@/components/MaskImageInput.vue'
 import ResultGrid from '@/components/ResultGrid.vue'
 import HistoryPanel from '@/components/HistoryPanel.vue'
+import LocaleSwitcher from '@/components/LocaleSwitcher.vue'
 import { Loader2, Sparkles } from '@lucide/vue'
+import { useI18n } from 'vue-i18n'
 
 const config = loadConfig()
 const apiKeyStore = useApiKeyStore()
 const paramsStore = useGenerationParamsStore()
 const generationStore = useGenerationStore()
+const { t } = useI18n()
 
 const canGenerate = computed(() => {
   return apiKeyStore.hasKey && paramsStore.canSubmit && !generationStore.isGenerating
@@ -35,12 +38,13 @@ async function handleGenerate() {
     <header v-else class="studio-topbar sticky top-0 z-20 border-b px-4 py-4">
       <div class="max-w-7xl mx-auto flex min-w-0 items-center justify-between gap-4">
         <h1 class="studio-title min-w-0 flex-1 truncate text-lg sm:flex-none sm:text-xl font-semibold">{{ config.appTitle }}</h1>
+        <LocaleSwitcher />
       </div>
     </header>
 
     <main class="flex-1 max-w-7xl mx-auto w-full p-3 sm:p-4 lg:p-5">
       <div class="lg:grid lg:grid-cols-[360px_minmax(0,1fr)_320px] xl:grid-cols-[360px_minmax(0,1fr)_340px] lg:gap-5">
-        <section class="space-y-4 mb-4 lg:mb-0 min-w-0" aria-label="生成配置">
+        <section class="space-y-4 mb-4 lg:mb-0 min-w-0" data-section="config" :aria-label="t('workbench.sectionConfig')">
           <div class="studio-card p-3.5 sm:p-4">
             <GenerationForm />
           </div>
@@ -63,21 +67,21 @@ async function handleGenerate() {
               generationStore.isGenerating ? 'is-generating' : '',
             ]"
             data-testid="generate-btn"
-            :aria-label="generationStore.isGenerating ? '正在生成' : '生成图片'"
+            :aria-label="generationStore.isGenerating ? t('workbench.generatingAriaLabel') : t('workbench.generateAriaLabel')"
           >
             <Loader2 v-if="generationStore.isGenerating" :size="18" class="animate-spin" aria-hidden="true" />
             <Sparkles v-else :size="18" aria-hidden="true" />
-            {{ generationStore.isGenerating ? '生成中...' : '生成图片' }}
+            {{ generationStore.isGenerating ? t('workbench.generating') : t('workbench.generate') }}
           </button>
         </section>
 
-        <section class="mb-4 lg:mb-0 min-w-0" aria-label="生成结果">
+        <section class="mb-4 lg:mb-0 min-w-0" data-section="result" :aria-label="t('workbench.sectionResult')">
           <div class="studio-card p-3.5 sm:p-4 min-h-[320px] sm:min-h-[360px] min-w-0">
             <ResultGrid />
           </div>
         </section>
 
-        <section class="space-y-4 min-w-0" aria-label="密钥和本地历史" data-testid="right-rail">
+        <section class="space-y-4 min-w-0" :aria-label="t('workbench.sectionRightRail')" data-testid="right-rail">
           <div class="studio-card p-3.5 sm:p-4">
             <ApiKeyInput />
           </div>

@@ -1,6 +1,7 @@
 import { getDatabase, isIndexedDBAvailable } from '@/storage/database'
 import type { HistoryRecord } from '@/types/history'
 import { classifyStorageError, type AppError } from '@/types/errors'
+import { translateValidation } from '@/i18n'
 
 const THUMBNAIL_MAX_SIZE = 256
 const THUMBNAIL_MIME = 'image/png'
@@ -96,7 +97,7 @@ export interface WriteHistoryParams {
 export async function writeHistory(params: WriteHistoryParams): Promise<{ success: boolean; error?: AppError }> {
   const available = await isIndexedDBAvailable()
   if (!available) {
-    return { success: false, error: classifyStorageError(new Error('IndexedDB 不可用')) }
+    return { success: false, error: classifyStorageError(new Error(translateValidation('storageUnavailableShort'))) }
   }
 
   try {

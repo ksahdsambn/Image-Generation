@@ -3,11 +3,13 @@ import { useApiKeyStore } from '@/stores/api-key'
 import { useConnectionStore } from '@/stores/connection'
 import { Eye, EyeOff, X as XIcon, KeyRound, Wifi, WifiOff, Loader2, CheckCircle2 } from '@lucide/vue'
 import { loadConfig } from '@/utils/config'
+import { useI18n } from 'vue-i18n'
 
 const apiKeyStore = useApiKeyStore()
 const connectionStore = useConnectionStore()
 const config = loadConfig()
 const rememberEnabled = config.rememberKeyEnabled
+const { t } = useI18n()
 
 async function handleTestConnection() {
   if (!apiKeyStore.hasKey) return
@@ -16,7 +18,7 @@ async function handleTestConnection() {
 </script>
 
 <template>
-  <div class="api-key-area min-w-0" data-testid="api-key-area" aria-label="API 密钥配置">
+  <div class="api-key-area min-w-0" data-testid="api-key-area" :aria-label="t('apikey.areaAriaLabel')">
     <div class="flex min-w-0 items-center gap-2">
       <KeyRound :size="16" class="text-teal-700 shrink-0" aria-hidden="true" />
       <div class="relative flex-1 min-w-0">
@@ -25,16 +27,16 @@ async function handleTestConnection() {
           :type="apiKeyStore.visible ? 'text' : 'password'"
           :value="apiKeyStore.apiKey"
           @input="apiKeyStore.setApiKey(($event.target as HTMLInputElement).value); connectionStore.reset()"
-          placeholder="输入 API Key"
+          :placeholder="t('apikey.placeholder')"
           class="w-full rounded-lg border border-stone-300 bg-stone-50/80 px-3 py-2 pr-24 text-sm focus:outline-none focus:ring-0 shadow-sm lg:pr-16"
           data-testid="api-key-input"
-          aria-label="API 密钥"
+          :aria-label="t('apikey.inputAriaLabel')"
         />
         <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
           <button
             @click="apiKeyStore.toggleVisible()"
             class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-600 hover:text-stone-900 lg:h-7 lg:w-7"
-            :aria-label="apiKeyStore.visible ? '隐藏密钥' : '显示密钥'"
+            :aria-label="apiKeyStore.visible ? t('apikey.toggleVisibleHide') : t('apikey.toggleVisibleShow')"
             data-testid="toggle-visible-btn"
             type="button"
           >
@@ -45,7 +47,7 @@ async function handleTestConnection() {
             v-if="apiKeyStore.hasKey"
             @click="apiKeyStore.clearApiKey(); connectionStore.reset()"
             class="flex h-11 w-11 items-center justify-center rounded-md hover:bg-stone-200/80 text-stone-600 hover:text-stone-900 lg:h-7 lg:w-7"
-            aria-label="清除密钥"
+            :aria-label="t('apikey.clear')"
             data-testid="clear-key-btn"
             type="button"
           >
@@ -58,7 +60,7 @@ async function handleTestConnection() {
         @click="handleTestConnection()"
         :disabled="connectionStore.status === 'testing'"
         class="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-stone-300 bg-white/80 hover:bg-stone-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm lg:h-10 lg:w-10"
-        :aria-label="connectionStore.status === 'testing' ? '测试连接中' : '测试连接'"
+        :aria-label="connectionStore.status === 'testing' ? t('apikey.testConnectionInProgress') : t('apikey.testConnection')"
         data-testid="test-connection-btn"
         type="button"
       >
@@ -69,7 +71,7 @@ async function handleTestConnection() {
       </button>
     </div>
     <div v-if="connectionStore.status === 'connected'" class="mt-2 rounded-md border border-green-200 bg-green-50/90 px-2 py-1 text-xs font-medium text-green-800 break-words" data-testid="connection-ok" role="status" aria-live="polite">
-      连接正常
+      {{ t('apikey.connected') }}
     </div>
     <div v-if="connectionStore.status === 'error' && connectionStore.error" class="mt-2 rounded-md border border-red-200 bg-red-50/90 px-2 py-1 text-xs font-medium text-red-700 break-words" data-testid="connection-error" role="alert" aria-live="assertive">
       {{ connectionStore.error.userMessage }}
@@ -83,7 +85,7 @@ async function handleTestConnection() {
           class="h-5 w-5 rounded border-stone-300 text-teal-700 focus:ring-teal-700"
           data-testid="remember-key-checkbox"
         />
-        记住密钥
+        {{ t('apikey.rememberKey') }}
       </label>
       <span
         v-if="apiKeyStore.rememberKey"
@@ -92,7 +94,7 @@ async function handleTestConnection() {
         role="status"
         aria-live="polite"
       >
-        密钥将保存到浏览器本地，请确保设备安全
+        {{ t('apikey.riskHint') }}
       </span>
     </div>
   </div>

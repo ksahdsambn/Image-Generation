@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { ApiResponse, ParsedImageResult } from '@/types/api'
 import type { AppError } from '@/types/errors'
 import { createValidationError, sanitizeText } from '@/types/errors'
+import { i18n, translateValidation } from '@/i18n'
 import { decideRequestMode } from '@/services/image-api'
 import type { EditsJsonParams, EditsMultipartParams, GenerationsParams } from '@/services/image-api'
 import { sendEditsJsonRequest, sendEditsMultipartRequest, sendGenerationsRequest } from '@/services/image-api'
@@ -27,9 +28,9 @@ export const useGenerationStore = defineStore('generation', () => {
   const loadingMessage = computed(() => {
     if (targetCount.value > 1) {
       const activeCount = Math.min(completedCount.value + 1, targetCount.value)
-      return `图片生成中 ${activeCount}/${targetCount.value}`
+      return i18n.global.t('loading.generatingProgress', { active: activeCount, target: targetCount.value })
     }
-    return '图片生成中，请稍候...'
+    return i18n.global.t('loading.generatingWait')
   })
 
   function normalizeTargetCount(value: number): number {
@@ -44,7 +45,7 @@ export const useGenerationStore = defineStore('generation', () => {
     }
     return {
       code: 'UNKNOWN_ERROR',
-      userMessage: '发生未知错误，请稍后重试',
+      userMessage: translateValidation('unknownError'),
       debugHint: sanitizeText(String(err), [apiKey]),
     }
   }
@@ -52,7 +53,7 @@ export const useGenerationStore = defineStore('generation', () => {
   function createPartialFailureError(completed: number, target: number, cause: AppError): AppError {
     return {
       ...cause,
-      userMessage: `已生成 ${completed}/${target}，剩余图片生成失败：${cause.userMessage}`,
+      userMessage: translateValidation('partialFailure', { completed, target, cause: cause.userMessage }),
     }
   }
 
@@ -170,13 +171,13 @@ export const useGenerationStore = defineStore('generation', () => {
   ): Promise<boolean> {
     const apiKey = apiKeyStore.apiKey.trim()
     if (!apiKey) {
-      error.value = createValidationError('缺少 API Key')
+      error.value = createValidationError(translateValidation('missingApiKey'))
       return false
     }
 
     const rawPrompt = paramsStore.prompt.trim()
     if (!rawPrompt) {
-      error.value = createValidationError('Prompt 不能为空')
+      error.value = createValidationError(translateValidation('emptyPrompt'))
       return false
     }
 
@@ -187,20 +188,20 @@ export const useGenerationStore = defineStore('generation', () => {
 
     const mode = decideRequestMode(paramsStore.localImages, paramsStore.webImageUrls)
     if (mode === 'conflict') {
-      error.value = createValidationError('不能同时使用本地上传和网页图片 URL，请选择其中一种')
+      error.value = createValidationError(translateValidation('mixedRefSources'))
       return false
     }
 
     if (mode === 'generations' && paramsStore.maskImage) {
-      error.value = createValidationError('遮罩图必须与参考图一起使用')
+      error.value = createValidationError(translateValidation('maskNeedsReference'))
       return false
     }
     if (mode === 'edits-multipart' && paramsStore.maskImage?.url) {
-      error.value = createValidationError('本地参考图只能搭配本地遮罩图')
+      error.value = createValidationError(translateValidation('maskLocalOnlyWithLocalRef'))
       return false
     }
     if (mode === 'edits-json' && paramsStore.maskImage?.file) {
-      error.value = createValidationError('网页图片 URL 只能搭配遮罩图 URL')
+      error.value = createValidationError(translateValidation('maskUrlOnlyWithUrlRef'))
       return false
     }
 
@@ -225,7 +226,7 @@ export const useGenerationStore = defineStore('generation', () => {
           revisedPrompt: result.revisedPrompt ? sanitizeText(result.revisedPrompt, [apiKey]) : result.revisedPrompt,
         }))
         if (safeResults.length === 0) {
-          throw createValidationError('生成结果为空，请重试')
+          throw createValidationError(translateValidation('emptyResult'))
         }
 
         if (!startedNewResults) {
@@ -259,7 +260,7 @@ export const useGenerationStore = defineStore('generation', () => {
           if (writeResult.failureCount === safeResults.length) {
             storageWarning.value = {
               code: 'STORAGE_ERROR',
-              userMessage: '图片已生成，但保存到本地历史失败，请立即下载。可尝试清空历史记录后重新生成。',
+              userMessage: translateValidation('storageFullWarning'),
               debugHint: 'All writes failed',
             }
           } else {
