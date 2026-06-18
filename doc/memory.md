@@ -249,5 +249,97 @@
   - `npm.cmd run build`: passed。
   - `npm.cmd test -- --run`: 26 files / 434 tests passed。
   - `npm.cmd run test:e2e`: 16 tests passed。
-  - Playwright CLI 桌面检查 `1280x800`: document/body horizontal overflow 均为 0，主要区域无重叠。
-  - Playwright CLI 移动检查 `375x812`: document/body horizontal overflow 均为 0，核心区域纵向堆叠正常，生成按钮宽度 351px，无文字溢出。
+- Playwright CLI 桌面检查 `1280x800`: document/body horizontal overflow 均为 0，主要区域无重叠。
+- Playwright CLI 移动检查 `375x812`: document/body horizontal overflow 均为 0，核心区域纵向堆叠正常，生成按钮宽度 351px，无文字溢出。
+
+## 2026-06-18 加入 Skill 系统基础能力
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 为生图站加入「Skill 规范」系统，生图前可将一段规范文本作为前缀拼接到用户 prompt 前面发给 API；默认关闭、手动开启；多个内置 skill 可选、拼接到 prompt 前缀。未改动三处 API builder、请求/响应解析、历史存储结构、环境变量与构建配置。
+- 修改内容:
+  - `src/types/skill.ts`（新增）: 内置 skill 清单 `SKILL_MANIFEST`（摄影写实/插画风格/电影质感）、类型、拼接常量 `SKILL_PROMPT_SEPARATOR`/`SKILL_USER_INPUT_LEAD`、`findSkillById`。
+  - `src/services/skill-loader.ts`（新增）: 从 `public/skills/<filename>` fetch 读取 skill 文本，内存缓存，失败归类为网络错误。
+  - `src/stores/skill.ts`（新增）: skill 状态与注入逻辑；`applySkillToPrompt()` 是唯一出口，未启用/未选择/内容缺失时严格原样返回用户输入。
+  - `src/stores/generation.ts`: 注入点改造——区分 `rawPrompt`（校验+写历史）与 `finalPrompt`（发请求，含 skill 前缀），约 4 行核心改动。
+  - `src/components/SkillSelector.vue`（新增）: 开关 + 下拉选择 UI。
+  - `src/components/GenerationForm.vue`: 引入并渲染 `<SkillSelector />`。
+  - `src/types/errors.ts`: 新增 `createNetworkError` 工厂函数（复用 `classifyNetworkError`）。
+  - `public/skills/photography.md`、`illustration.md`、`cinematic.md`（新增）: 三个内置 skill 示范文件。
+- 验证:
+  - `npx vitest run`: 全量通过（新增 `src/__tests__/skill.test.ts` 13 个用例）。
+  - `npx vue-tsc --noEmit`: 零错误。
+  - `npx vite build`: passed，`dist/skills/` 下三个 .md 已正确输出到构建产物。
+
+## 2026-06-18 自定义 Skill（IndexedDB 持久化 + 内联编辑）
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 在内置只读 skill 基础上，新增用户可自定义 skill：网页内联编辑（名称/简介/内容）、存 IndexedDB 持久化、刷新不丢；内置 skill 保持只读、可加自定义。未改 API 请求逻辑、生图注入格式。
+- 修改内容:
+  - `src/types/skill.ts`: 新增 `CustomSkillRecord`、`SkillOption`、`isCustomSkillId`、`CUSTOM_SKILL_ID_PREFIX`、`builtinSkillOptions()`；自定义 id 带 `custom-` 前缀与内置天然隔离。
+  - `src/storage/database.ts`: DB v1→v2，新增 `customSkills` 表（`++pk, skillId, updatedAt`），保留 history 表平滑升级。
+  - `src/storage/custom-skill-storage.ts`（新增）: 自定义 skill CRUD（list/get/save/delete），新增/更新/校验/软失败，复用 `classifyStorageError`。
+  - `src/stores/skill.ts`: 合并内置+自定义双数据源（`allSkills` computed）；`applySkillToPrompt` 兼容两类；新增 `loadCustomSkills/startCreate/startEdit/cancelEdit/saveDraft/removeCustomSkill` 与编辑草稿状态 `draft`。
+  - `src/components/SkillSelector.vue`: 下拉含内置（标注「（内置）」）+自定义；自定义列表行带 ✎ 编辑/🗑 删除（二次确认）；内联编辑区（名称* / 简介 / 规范内容* + 保存/取消）。
+  - `src/main.ts`: 应用启动后异步加载自定义 skill 列表（不阻塞渲染）。
+  - `src/__tests__/skill.test.ts`: 扩展为 17 个用例，覆盖双源注入、合并视图、编辑草稿。
+  - `src/__tests__/storage/custom-skill-storage.test.ts`（新增）: 存储层 8 个用例。
+- 验证:
+  - `npx vitest run`: 全量通过。
+  - `npx vue-tsc --noEmit`: 零错误。
+  - `npx vite build`: passed。
+
+## 2026-06-18 Skill 入口并入下拉框 + UI 微调
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 纯 UI/交互调整。将「新建 Skill」独立按钮并入下拉框、移除顶栏徽标、调整文案与字号；未改 skill 数据逻辑、存储、注入格式。
+- 修改内容:
+  - `src/types/skill.ts`: 新增常量 `SKILL_NEW_TRIGGER = '__new__'`，作为下拉框「自定义 Skill」入口项占位 value（store 不存储该值）。
+  - `src/components/SkillSelector.vue`: 下拉框选项末尾新增「＋ 自定义 Skill」入口，选中时触发 `startCreate()` 并把 select 显示值恢复为当前实际选中项；删除原独立的「+ 新建 Skill」虚线按钮；移除入口上方的横线分隔项；开关标签「按 Skill 规范生图」改为「加载 Skill 规范」，label 字号由 `text-xs` 调大为 `text-sm`（比【尺寸】【质量】【输出格式】三项大一档）。
+  - `src/pages/Workbench.vue`: 移除顶栏右侧「GPT Image Studio」徽标（含绿点与文字），顶栏仅保留左侧应用标题。
+- 验证:
+  - `npx vitest run`: 30 files / 488 tests passed。
+  - `npx vue-tsc --noEmit`: 零错误。
+  - `npx vite build`: passed，CSS 71.06 kB / gzip 12.87 kB，JS 393.63 kB / gzip 130.44 kB。
+
+## 2026-06-19 前台多语言切换（i18n，5 种语言）
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 引入 `vue-i18n`，新增前台多语言切换，支持简体中文（zh-CN，默认/兜底）、English（en）、繁體中文（zh-TW）、日本語（ja）、한국어（ko）；自动检测浏览器语言 + localStorage 持久化用户选择；Skill 提示词内容（`public/skills/*.md`、`SKILL_MANIFEST` name/description、`SKILL_USER_INPUT_LEAD`）按用户选择**暂不国际化**（这些会作为 prompt 发给 API），保持出图稳定。
+- 修改内容:
+  - 新增翻译文件 `src/locales/{zh-CN,en,zh-TW,ja,ko}.ts`（约 170 个 key）+ `src/locales/index.ts`（语言清单 `SUPPORTED_LOCALES`、`messages` 汇总、`isSupportedLocale`）。
+  - 新增 `src/i18n/index.ts`: `createI18n`（legacy:false，Composition 模式）、`detectInitialLocale`（localStorage → navigator.language 精确/前缀匹配，中文分支区分简繁 → 兜底 zh-CN）、`translateValidation`、`syncHtmlLang`。
+  - 新增 `src/stores/locale.ts`: `currentLocale` computed 双向绑定全局 i18n、`setLocale`（同步 i18n + localStorage['gpt_image_2_locale'] + `<html lang>`），仿 `api-key.ts` 持久化模式。
+  - 新增 `src/components/LocaleSwitcher.vue`: Globe 图标下拉切换器，挂在顶部工具栏右上角。
+  - `src/main.ts`: 注册 i18n 插件，启动时 `syncHtmlLang()`。
+  - 提取所有硬编码中文文案到 `t()`: 8 个 Vue 组件（ApiKeyInput/GenerationForm/ReferenceImages/MaskImageInput/ResultGrid/HistoryPanel/SkillSelector/Workbench）；`errors.ts`（`ERROR_MESSAGES` 改为 `errorMessage()` 按 locale 返回，动态 HTTP 错误改带参数 key `errors.HTTP_*_WITH_MSG`）；`image-api.ts`/`generation.ts`(store)/`skill.ts`/`custom-skill-storage.ts`/`storage-availability.ts`（返回 messageKey + 即时文案）/`history-writer.ts`/`config.ts`/`connection-test.ts`；`types/generation.ts` 的 `validatePrompt` + `IMAGE_SIZE_OPTIONS`（`label`→`labelKey`）。
+  - `src/style.css`: 3 处 `aria-label="中文"` 选择器改为 `data-section`/`data-testid` 属性选择器（解耦样式与文案：`section[data-section="config"]`/`[data-section="result"]`、`[data-testid="history-search-btn"]`），避免 aria-label 国际化后样式失效。
+  - HistoryPanel: `toLocaleString('zh-CN')` 改为 `toLocaleString(localeStore.currentLocale)`，切换语言日期格式随之变化；2 处原生 `confirm()` 改用 `t()`。
+  - 测试: 新增 `src/__tests__/helpers/i18n.ts`（`createI18nForTest`）、`src/__tests__/locales.test.ts`（校验 5 语言 key 集合一致 + detectInitialLocale + locale store）、`src/__tests__/components/LocaleSwitcher.test.ts`；setup `setup-indexeddb.ts` 锁定全局 i18n 为 zh-CN 避免 jsdom `navigator.language`(en-US) 干扰断言；受影响组件测试均加 i18n 插件、更新断言（label→labelKey、aria-label 用 t() 解析）。
+- 验证:
+  - `npx vitest run`: 30 files / 488 tests passed（含 17 个新增 locale/switcher 测试，含跨语言 key 一致性校验防漏译）。
+  - `npm run build`（vue-tsc -b + vite build）: passed。
+
+## 2026-06-19 修复 Cloudflare Pages 部署失败（跨平台 lockfile）
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 多语言功能加入 `vue-i18n` 后，Cloudflare Pages `npm ci` 失败（`Missing: @emnapi/core@1.11.1` 等）。根因是 npm 跨平台原生可选依赖不兼容：本地 npm 11.6.2 / Node 24 / Windows 生成的 lockfile 只记录 Windows 平台原生依赖，**不记录 Linux 平台的**（`@emnapi/*` 来自 `@tailwindcss/oxide` 和 `rolldown` 的 Linux WASM 绑定），而 Cloudflare 是 npm 10.9.2 / Node 22 / Linux。经多次实验确认在 Windows 上无论 npm 11 还是 npm 10 都无法生成含 Linux 依赖的 lockfile。
+- 修改内容（方案 B：Linux 环境生成 lockfile）:
+  - 新增 `.github/workflows/sync-lockfile.yml`: 在 Ubuntu（Node 22）上 `npm install` 重新生成 lockfile（含 Linux 原生依赖），校验后自动 commit 并 push 回 main；触发方式为手动触发 + `package.json` 变动自动触发。
+  - 新增 `.nvmrc`（内容 `22`）+ `package.json` 新增 `"engines": { "node": "22" }`: 锁定 Cloudflare / GitHub Actions / 本地三方都用 Node 22，杜绝版本漂移。
+  - workflow 首次运行自动生成并 push 了 Linux-correct lockfile（commit `b4c1d49 chore: regenerate package-lock.json on Linux`）。
+- 验证:
+  - Cloudflare Pages 部署日志: `npm clean-install` 成功（`added 290 packages` / `found 0 vulnerabilities`），`npm run build` 通过（`✓ built in 726ms`），`Success: Your site was deployed!`。
+  - 中间黄色 `[INVALID_ANNOTATION]` 是 `@vueuse/core` 的 `#__PURE__` 注释警告，与本项目代码无关、不影响功能。
+
+## 2026-06-19 修复语言切换下拉框不显示
+
+- 操作模型ID: ZCode (builtin:bigmodel-coding-plan/GLM-5.2)
+- 范围: 上线后发现右上角语言切换下拉框无法显示。根因是 `.studio-topbar` 有 `overflow: hidden`（用于裁剪装饰性 `::before` 渐变条），而下拉框原本用 `position: absolute` 直接渲染在 topbar 内部，向下展开时超出 topbar 底边被裁掉。
+- 修改内容:
+  - `src/components/LocaleSwitcher.vue`: 下拉浮层改用 `<Teleport to="body">` 渲染到 `<body>` 下，绕开 topbar 的 overflow 限制；浮层 `position: fixed`，位置根据触发按钮 `getBoundingClientRect()` 动态计算钉在按钮正下方；`onClickOutside` 显式 `ignore: [triggerRef, panelRef]`（Teleport 后浮层在 rootRef 之外，否则点选项会先触发外部点击关闭）；监听 `window resize`，浮层打开时重新定位避免错位。
+  - `src/__tests__/components/LocaleSwitcher.test.ts`: 适配 Teleport（jsdom 下定位不稳定，测试 stub teleport 只关注切换逻辑；保留 4 个用例覆盖打开/列出/切换/当前高亮）。
+- 验证:
+  - `npx vitest run`: 30 files / 488 tests passed。
+  - `npm run build`: passed。
+  - 已推送 commit `3dc2ca5`，Cloudflare 自动重新部署。
+
