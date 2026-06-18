@@ -1,0 +1,88 @@
+name: Sync lockfile (Linux)
+
+# 在 Linux 环境重新生成 package-lock.json，确保包含 Linux 平台的原生可选依赖
+# （@emnapi/* 等，来自 @tailwindcss/oxide 和 rolldown 的 Linux WASM 绑定），
+# 解决「Windows 上生成的 lockfile 在 Cloudflare Pages（Linux/npm ci）部署失败」的问题。
+#
+# 触发方式：
+#   - 手动触发（workflow_dispatch）：需要时点一下即可同步 lockfile
+#   - package.json 变动时自动触发：依赖增减后自动重新生成
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+
+permissions:
+  contents: write
+
+jobs:
+  sync-lockfile:
+    name: Regenerate package-lock.json on Linux
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # 需要 token 权限以便回推，用默认 GITHUB_TOKEN 即可（permissions 已放开 write）
+          persist-credentials: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          # 与 Cloudflare Pages 使用的 Node 版本保持一致（Cloudflare 当前是 Node 22）
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Show tool versions
+        run: |
+          echo "node: $(node --version)"
+          echo "npm: $(npm --version)"
+
+      - name: Remove existing lockfile
+        run: rm -f package-lock.json
+
+      - name: Regenerate lockfile on Linux
+        # 在 Linux 上全新 install，生成的 lockfile 会包含 Linux 平台的原生可选依赖
+        run: npm install --no-audit --no-fund
+
+      - name: Verify Linux native deps present
+        # 校验关键 Linux 原生依赖已写入 lockfile，否则部署仍会失败
+        run: |
+          set -e
+          echo "=== @emnapi/core entries in lockfile ==="
+          grep -c "emnapi/core/-/core-" package-lock.json || true
+          if ! grep -q "emnapi/core" package-lock.json; then
+            echo "WARNING: @emnapi/core not found in lockfile"
+          fi
+
+      - name: Detect changes
+        id: changed
+        run: |
+          git add package-lock.json
+          if git diff --cached --quiet package-lock.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to lockfile."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit regenerated lockfile
+        if: steps.changed.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: regenerate package-lock.json on Linux (cross-platform native deps)"
+          git push
+
+      - name: Summary
+        run: |
+          if [ "${{ steps.changed.outputs.changed }}" = "true" ]; then
+            echo "✅ Lockfile regenerated and pushed. Cloudflare Pages will redeploy automatically."
+          else
+            echo "✅ Lockfile already up to date."
+          fi
