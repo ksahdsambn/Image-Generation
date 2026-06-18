@@ -228,3 +228,8 @@ export function createConfigError(message: string): AppError {
 export function createValidationError(message: string): AppError {
   return { code: AppErrorCode.VALIDATION_ERROR, userMessage: message, debugHint: '' }
 }
+
+/** skill 规范文件加载失败时使用，复用 NETWORK_ERROR 的用户提示文案。 */
+export function createNetworkError(err: Error, explicitSecrets: string[] = []): AppError {
+  return classifyNetworkError(err, explicitSecrets)
+}

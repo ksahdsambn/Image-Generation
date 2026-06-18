@@ -12,6 +12,7 @@ import { writeMultipleHistory } from '@/storage/history-writer'
 import { MAX_IMAGE_COUNT, type LocalImage, type WebImageUrl } from '@/types/generation'
 import type { useApiKeyStore } from '@/stores/api-key'
 import type { useGenerationParamsStore } from '@/stores/generation-params'
+import { useSkillStore } from '@/stores/skill'
 
 export const useGenerationStore = defineStore('generation', () => {
   const isGenerating = ref(false)
@@ -173,11 +174,16 @@ export const useGenerationStore = defineStore('generation', () => {
       return false
     }
 
-    const trimmedPrompt = paramsStore.prompt.trim()
-    if (!trimmedPrompt) {
+    const rawPrompt = paramsStore.prompt.trim()
+    if (!rawPrompt) {
       error.value = createValidationError('Prompt 不能为空')
       return false
     }
+
+    // 启用 skill 时，将规范内容作为前缀拼接到用户 prompt 前面发给 API；
+    // 历史记录仍保存用户原始 rawPrompt，保证历史搜索/复用干净。
+    const skillStore = useSkillStore()
+    const finalPrompt = skillStore.applySkillToPrompt(rawPrompt)
 
     const mode = decideRequestMode(paramsStore.localImages, paramsStore.webImageUrls)
     if (mode === 'conflict') {
@@ -205,12 +211,12 @@ export const useGenerationStore = defineStore('generation', () => {
     targetCount.value = normalizeTargetCount(paramsStore.n)
 
     try {
-      const safePrompt = sanitizeText(trimmedPrompt, [apiKey])
+      const safePrompt = sanitizeText(rawPrompt, [apiKey])
       let startedNewResults = false
       let requestsCompleted = 0
 
       while (requestsCompleted < targetCount.value) {
-        const apiResponse = await sendSingleImageRequest(apiKey, trimmedPrompt, paramsStore, mode, fetchFn)
+        const apiResponse = await sendSingleImageRequest(apiKey, finalPrompt, paramsStore, mode, fetchFn)
         requestsCompleted++
 
         const parsedResults = parseApiResponse(apiResponse, paramsStore.outputFormat)

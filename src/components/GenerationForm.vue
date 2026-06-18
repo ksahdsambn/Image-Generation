@@ -9,6 +9,7 @@ import {
   MAX_IMAGE_COUNT,
   MIN_IMAGE_COUNT,
 } from '@/types/generation'
+import SkillSelector from '@/components/SkillSelector.vue'
 
 const store = useGenerationParamsStore()
 
@@ -39,6 +40,8 @@ const qualityLabels: Record<string, string> = {
         {{ store.promptError }}
       </p>
     </div>
+
+    <SkillSelector />
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <div>
