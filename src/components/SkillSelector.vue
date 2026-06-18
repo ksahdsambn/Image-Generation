@@ -62,8 +62,8 @@ async function confirmDelete(skillId: string) {
 <template>
   <div class="skill-selector min-w-0" data-testid="skill-selector" aria-label="Skill 规范选择">
     <div class="flex items-center justify-between gap-2">
-      <label for="skill-toggle" class="text-xs font-semibold text-stone-600 select-none cursor-pointer">
-        按 Skill 规范生图
+      <label for="skill-toggle" class="block text-xs font-semibold text-stone-600 mb-1.5 select-none cursor-pointer">
+        加载 Skill 规范
       </label>
       <button
         id="skill-toggle"
@@ -97,7 +97,6 @@ async function confirmDelete(skillId: string) {
         <option v-for="entry in store.allSkills" :key="entry.id" :value="entry.id">
           {{ entry.name }}{{ entry.builtin ? '（内置）' : '' }}
         </option>
-        <option disabled>────────</option>
         <option :value="SKILL_NEW_TRIGGER" data-testid="skill-new-option">＋ 自定义 Skill</option>
       </select>
 
