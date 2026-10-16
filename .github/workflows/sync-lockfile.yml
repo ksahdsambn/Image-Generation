@@ -22,7 +22,7 @@ permissions:
 jobs:
   sync-lockfile:
     name: Regenerate package-lock.json on Linux
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, dartnode-linux, dartnode-build]
 
     steps:
       - name: Checkout
@@ -86,3 +86,4 @@ jobs:
           else
             echo "✅ Lockfile already up to date."
           fi
+    if: ${{ ((github.event_name != 'pull_request' && github.event_name != 'pull_request_target') || github.event.pull_request.head.repo.full_name == github.repository) }}

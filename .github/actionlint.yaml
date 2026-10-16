@@ -1,0 +1,8 @@
+self-hosted-runner:
+  labels:
+    - dartnode-linux
+    - dartnode-build
+    - dartnode-signing
+    - dartnode-windows
+    - dartnode-macos
+    - dartnode-exclusive
